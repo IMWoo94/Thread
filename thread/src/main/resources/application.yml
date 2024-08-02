@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: thread
+logging:
+  level:
+    root: debug
