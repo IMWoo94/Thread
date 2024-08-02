@@ -1,6 +1,6 @@
 spring:
   application:
-    name: thread
+    name: threads
 logging:
   level:
     root: debug
