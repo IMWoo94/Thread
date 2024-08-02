@@ -1,10 +1,10 @@
-package com.imwoo.thread;
+package com.imwoo.threads;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ThreadApplicationTests {
+class ThreadsApplicationTests {
 
 	@Test
 	void contextLoads() {
