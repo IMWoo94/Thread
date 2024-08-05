@@ -30,7 +30,7 @@ public class PostController {
 
 	@GetMapping("/api/v1/posts/{postId}")
 	public ResponseEntity<Post> getPost(
-		@PathVariable Long postId
+		@PathVariable("postId") Long postId
 	) {
 		// TODO 실제 포스트 정보 DB 조회 처리
 		ArrayList<Post> posts = new ArrayList<>();
