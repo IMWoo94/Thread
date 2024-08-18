@@ -15,10 +15,12 @@ import com.imwoo.threads.model.Post;
 import com.imwoo.threads.service.PostService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/posts")
+@Slf4j
 public class PostController {
 
 	private final PostService postService;
@@ -33,6 +35,7 @@ public class PostController {
 		@PathVariable("postId") Long postId
 	) {
 		Optional<Post> matchingPost = postService.getPostByPostId(postId);
+		log.info("postController test : {}", matchingPost.toString());
 		return matchingPost
 			.map(ResponseEntity::ok)
 			.orElseGet(() -> ResponseEntity.notFound().build());
