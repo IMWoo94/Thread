@@ -8,10 +8,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.imwoo.threads.model.Post;
+import com.imwoo.threads.model.PostCreateRequest;
 import com.imwoo.threads.service.PostService;
 
 import lombok.RequiredArgsConstructor;
@@ -39,6 +42,16 @@ public class PostController {
 		return matchingPost
 			.map(ResponseEntity::ok)
 			.orElseGet(() -> ResponseEntity.notFound().build());
+	}
+
+	@PostMapping
+	public ResponseEntity<Post> createPost(
+		@RequestBody PostCreateRequest postCreateRequest) {
+		// Post 신규 생성
+		log.info("postController create before : {}", postCreateRequest.toString());
+		var post = postService.createPost(postCreateRequest);
+		log.info("postController create after : {}", post.toString());
+		return ResponseEntity.ok(post);
 	}
 
 	@ExceptionHandler(RuntimeException.class)

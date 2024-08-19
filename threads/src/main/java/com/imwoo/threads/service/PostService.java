@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.imwoo.threads.model.Post;
+import com.imwoo.threads.model.PostCreateRequest;
 
 @Service
 public class PostService {
@@ -31,4 +32,12 @@ public class PostService {
 		return posts.stream().filter(post -> postId.equals(post.getPostId())).findFirst();
 	}
 
+	public Post createPost(PostCreateRequest postCreateRequest) {
+		Long newPostId = posts.stream().mapToLong(Post::getPostId).max().orElse(0L) + 1;
+
+		Post newPost = new Post(newPostId, postCreateRequest.body(), ZonedDateTime.now());
+		posts.add(newPost);
+
+		return newPost;
+	}
 }
