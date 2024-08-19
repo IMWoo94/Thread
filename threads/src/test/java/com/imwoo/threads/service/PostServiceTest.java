@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.imwoo.threads.model.Post;
+import com.imwoo.threads.model.PostCreateRequest;
 
 class PostServiceTest {
 
@@ -36,6 +37,17 @@ class PostServiceTest {
 	void getPostByPostIdNonExists() {
 		Optional<Post> post = postService.getPostByPostId(999L);
 		assertThat(post.isPresent()).isFalse();
+	}
+
+	@Test
+	@DisplayName("Post 생성 테스트")
+	void createPost() {
+		var body = "신규 포스트 생성";
+		Post newPost = postService.createPost(new PostCreateRequest(body));
+
+		assertThat(newPost).isNotNull();
+		assertThat(newPost.getPostId()).isGreaterThan(0);
+		assertThat(newPost.getBody()).isEqualTo(body);
 	}
 
 }
