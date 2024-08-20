@@ -56,4 +56,16 @@ public class PostService {
 
 		return findPost.get();
 	}
+
+	public void deletePost(Long postId) {
+		Optional<Post> findPost = getPostByPostId(postId);
+
+		findPost.ifPresentOrElse(
+			posts::remove,
+			() -> {
+				throw new ResponseStatusException(
+					HttpStatus.NOT_FOUND, "Post not found.");
+			});
+
+	}
 }
