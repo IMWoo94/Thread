@@ -1,24 +1,30 @@
 package com.imwoo.threads.controller;
 
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
+import com.imwoo.threads.model.PostUpdateRequest;
 import com.imwoo.threads.service.PostService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +81,42 @@ class PostControllerTest {
 				.characterEncoding(StandardCharsets.UTF_8)
 				.content(requestBody)
 		).andExpect(MockMvcResultMatchers.status().isOk());
+	}
+
+	@Test
+	@DisplayName("Post 수정 성공")
+	void updatePostOk() throws Exception {
+
+		var requestBody = readJson(new PostUpdateRequest("수정 포스트"));
+
+		Mockito.when(postService.updatePost(Mockito.anyLong(), Mockito.any()))
+			.thenReturn(new Post(1L, "수정 포스트", ZonedDateTime.now()));
+
+		mockMvc.perform(
+			MockMvcRequestBuilders.patch(GET_POST_URL)
+				.contentType(MediaType.APPLICATION_JSON)
+				.characterEncoding(StandardCharsets.UTF_8)
+				.content(requestBody)
+		).andExpect(MockMvcResultMatchers.status().isOk());
+	}
+
+	@Test
+	@DisplayName("Post 수정 실패")
+	void updatePostFail() throws Exception {
+		var requestBody = readJson(new PostUpdateRequest("수정 포스트"));
+
+		Mockito.when(postService.updatePost(Mockito.anyLong(), Mockito.any()))
+			.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found."));
+
+		mockMvc.perform(
+				MockMvcRequestBuilders.patch(GET_POST_URL)
+					.contentType(MediaType.APPLICATION_JSON)
+					.characterEncoding(StandardCharsets.UTF_8)
+					.content(requestBody)
+			).andDo(print())
+			.andExpect(result -> {
+				Assertions.assertTrue(result.getResolvedException() instanceof ResponseStatusException);
+			});
 	}
 
 }
