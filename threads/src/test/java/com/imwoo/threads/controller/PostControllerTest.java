@@ -119,4 +119,34 @@ class PostControllerTest {
 			});
 	}
 
+	@Test
+	@DisplayName("Post 삭제 성공")
+	void deletePostOk() throws Exception {
+		Mockito.doNothing().when(postService).deletePost(Mockito.anyLong());
+
+		mockMvc.perform(
+				MockMvcRequestBuilders.delete(GET_POST_URL)
+					.contentType(MediaType.APPLICATION_JSON)
+					.characterEncoding(StandardCharsets.UTF_8)
+			).andDo(print())
+			.andExpect(MockMvcResultMatchers.status().isNoContent());
+	}
+
+	@Test
+	@DisplayName("Post 삭제 실패")
+	void deletePostFail() throws Exception {
+		Mockito.doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found."))
+			.when(postService)
+			.deletePost(Mockito.anyLong());
+
+		mockMvc.perform(
+				MockMvcRequestBuilders.delete(GET_POST_URL)
+					.contentType(MediaType.APPLICATION_JSON)
+					.characterEncoding(StandardCharsets.UTF_8)
+			).andDo(print())
+			.andExpect(result -> {
+				Assertions.assertTrue(result.getResolvedException() instanceof ResponseStatusException);
+			});
+	}
+
 }

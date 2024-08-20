@@ -72,4 +72,21 @@ class PostServiceTest {
 			.hasMessage("%s %s", HttpStatus.NOT_FOUND, "\"Post not found.\"");
 	}
 
+	@Test
+	@DisplayName("Post 삭제 성공 테스트")
+	void deletePostOk() {
+		var post = postService.getPostByPostId(1L);
+		postService.deletePost(post.get().getPostId());
+
+		assertThat(postService.getPostByPostId(1L)).isEmpty();
+	}
+
+	@Test
+	@DisplayName("Post 삭제 실패 테스트")
+	void deletePostFail() {
+		assertThatThrownBy(() -> postService.deletePost(999L))
+			.isInstanceOf(ResponseStatusException.class)
+			.hasMessage("%s %s", HttpStatus.NOT_FOUND, "\"Post not found.\"");
+	}
+
 }
