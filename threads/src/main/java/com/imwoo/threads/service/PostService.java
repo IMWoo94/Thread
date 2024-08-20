@@ -5,10 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
+import com.imwoo.threads.model.PostUpdateRequest;
 
 @Service
 public class PostService {
@@ -39,5 +42,18 @@ public class PostService {
 		posts.add(newPost);
 
 		return newPost;
+	}
+
+	public Post updatePost(Long postId, PostUpdateRequest postUpdateRequest) {
+		Optional<Post> findPost = getPostByPostId(postId);
+
+		findPost.ifPresentOrElse(
+			post -> post.setBody(postUpdateRequest.body()),
+			() -> {
+				throw new ResponseStatusException(
+					HttpStatus.NOT_FOUND, "Post not found.");
+			});
+
+		return findPost.get();
 	}
 }

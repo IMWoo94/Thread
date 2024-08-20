@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
+import com.imwoo.threads.model.PostUpdateRequest;
 import com.imwoo.threads.service.PostService;
 
 import lombok.RequiredArgsConstructor;
@@ -51,6 +53,18 @@ public class PostController {
 		log.info("postController create before : {}", postCreateRequest.toString());
 		var post = postService.createPost(postCreateRequest);
 		log.info("postController create after : {}", post.toString());
+		return ResponseEntity.ok(post);
+	}
+
+	@PatchMapping("/{postId}")
+	public ResponseEntity<Post> updatePost(
+		@PathVariable Long postId,
+		@RequestBody PostUpdateRequest postUpdateRequest
+	) {
+		// Post 수정
+		log.info("postController update before : {}", postUpdateRequest.toString());
+		var post = postService.updatePost(postId, postUpdateRequest);
+		log.info("postController update after : {}", post.toString());
 		return ResponseEntity.ok(post);
 	}
 
