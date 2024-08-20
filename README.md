@@ -31,8 +31,27 @@ Threads 스타일의 SNS 를 만들어 보면서 외부적으로 많은 사용�
 
 
 ## 사용 스택
-#java #SpringBoot #Swagger
 
+#Java21 #Spring Boot 3.3.x #Spring 6.1.x
+
+Doc : #Swagger #SpringDoc
+
+Test : #JUnit5 #Mockito
+
+## 아키텍처
+### 1차 아키텍처
+![Threads_Architecture_v1](https://github.com/user-attachments/assets/03d750fe-665d-42f6-8f97-372311bfa69a)
+
+- 1차 아키텍처의 경우 로컬 환경에서 애플리케이션 메모리를 활용한 단순 CRUD 구현. ( 실제 운영에서 절대 활용 불가 )
+- 생각나는 문제점
+  - [x] 로컬 환경으로 외부 유입이 불가능
+  - [x] 영구적인 데이터 보관 불가
+  - [x] 동시성 이슈 발생 가능
+- 해결 방안
+  - [ ] DB 연결
+  - [ ] 가상 인프라 구축 
+
+- 1차 아키텍처를 좀 더 발전시켜서 진행을 해보자.
 
 ## 참고
 [인스타그램 백엔드가 20억 유저를 감당하는 방법!](https://www.youtube.com/watch?v=V27XkmVPqYQ&t=14s)
