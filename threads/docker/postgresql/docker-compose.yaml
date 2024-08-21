@@ -1,0 +1,31 @@
+name: threads-postgres-service
+services:
+  db:
+    image: postgres:16
+    restart: always
+
+    container_name: threads-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_INITDB_ARGS=--data-checksums -E utf8 --no-locale
+      - POSTGRES_DB=threads-db
+      - POSTGRES_USER=threads-master
+      - POSTGRES_PASSWORD=1234
+      - TZ=Asia/Seoul
+    volumes:
+      - /Users/imwoo/postgres-data:/var/lib/postgresql/data
+
+# docker cli
+# docker run --name threads-postgres \
+# -e POSTGRES_INITDB_ARGS="--data-checksums -E utf8 --no-locale" \
+# -e POSTGRES_USER=threads-master \
+# -e POSTGRES_PASSWORD=1234 \
+# -e POSTGRES_DB=threads-db \
+# -e TZ=Asia/Seoul \
+# -v $(pwd)/postgres-data:/var/lib/postgresql/data \
+# -p 5432:5432 \
+# -d postgres
+
+# docker compose run cmd
+# docker compose -f ./docker/postgresql/docker-compose.yaml up --build -d
