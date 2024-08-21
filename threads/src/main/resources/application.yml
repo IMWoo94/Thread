@@ -1,6 +1,8 @@
 spring:
   application:
     name: threads
+  profiles:
+    active: dev
 logging:
   level:
     root: info
