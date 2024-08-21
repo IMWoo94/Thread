@@ -11,9 +11,14 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
+import com.imwoo.threads.model.PostResponse;
 import com.imwoo.threads.model.PostUpdateRequest;
+import com.imwoo.threads.repository.PostEntityRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class PostService {
 
 	// Controller 중복 부분 임시 Static 처리
@@ -26,12 +31,19 @@ public class PostService {
 		posts.add(new Post(3L, "Post 3", ZonedDateTime.now()));
 	}
 
-	public List<Post> getPosts() {
-		// TODO 차후 DB 정보 기반
-		return posts;
+	private final PostEntityRepository postEntityRepository;
+
+	public List<PostResponse> getPosts() {
+		return postEntityRepository.findAllPostResponseBy();
 	}
 
-	public Optional<Post> getPostByPostId(Long postId) {
+	public PostResponse getPostByPostId(Long postId) {
+		return postEntityRepository.findByPostId(postId)
+			.orElseThrow(() -> new ResponseStatusException(
+				HttpStatus.NOT_FOUND, "Post not found."));
+	}
+
+	public Optional<Post> getPost(Long postId) {
 		return posts.stream().filter(post -> postId.equals(post.getPostId())).findFirst();
 	}
 
@@ -45,7 +57,7 @@ public class PostService {
 	}
 
 	public Post updatePost(Long postId, PostUpdateRequest postUpdateRequest) {
-		Optional<Post> findPost = getPostByPostId(postId);
+		Optional<Post> findPost = getPost(postId);
 
 		findPost.ifPresentOrElse(
 			post -> post.setBody(postUpdateRequest.body()),
@@ -58,7 +70,7 @@ public class PostService {
 	}
 
 	public void deletePost(Long postId) {
-		Optional<Post> findPost = getPostByPostId(postId);
+		Optional<Post> findPost = getPost(postId);
 
 		findPost.ifPresentOrElse(
 			posts::remove,
