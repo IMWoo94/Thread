@@ -17,7 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.imwoo.threads.model.PostCreateRequest;
 import com.imwoo.threads.model.PostResponse;
+import com.imwoo.threads.model.entity.PostEntity;
 import com.imwoo.threads.repository.PostEntityRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -113,16 +115,25 @@ class PostServiceTest {
 		Mockito.verifyNoMoreInteractions(postEntityRepository);
 	}
 
-	// @Test
-	// @DisplayName("Post 생성 테스트")
-	// void createPost() {
-	// 	var body = "신규 포스트 생성";
-	// 	Post newPost = postService.createPost(new PostCreateRequest(body));
-	//
-	// 	assertThat(newPost).isNotNull();
-	// 	assertThat(newPost.getPostId()).isGreaterThan(0);
-	// 	assertThat(newPost.getBody()).isEqualTo(body);
-	// }
+	@Test
+	@DisplayName("Post 생성 테스트")
+	void createPost() {
+		// given
+		var body = "신규 포스트 생성";
+		var postRequest = new PostCreateRequest(body);
+
+		// mocking
+		when(postEntityRepository.save(any(PostEntity.class)))
+			.thenReturn(new PostEntity(1L, body, ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		// when
+		PostResponse post = postService.createPost(postRequest);
+
+		// then
+		assertThat(post).isNotNull();
+		assertThat(post.postId()).isGreaterThan(0);
+		assertThat(post.body()).isEqualTo(body);
+	}
 	//
 	// @Test
 	// @DisplayName("Post 수정 성공 테스트")

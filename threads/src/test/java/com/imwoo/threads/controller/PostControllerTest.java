@@ -81,7 +81,7 @@ class PostControllerTest {
 		var requestBody = readJson(new PostCreateRequest("신규 포스트 생성 테스트 데이터"));
 
 		Mockito.when(postService.createPost(Mockito.any()))
-			.thenReturn(new Post(1L, "test", ZonedDateTime.now()));
+			.thenReturn(new PostResponse(1L, "test", ZonedDateTime.now(), ZonedDateTime.now(), null));
 
 		mockMvc.perform(
 			MockMvcRequestBuilders.post(BASIC_URL)
@@ -171,7 +171,7 @@ class PostControllerTest {
 			.andExpect(result -> {
 				Assertions.assertTrue(result.getResolvedException() instanceof ResponseStatusException);
 			});
-		
+
 		Mockito.verify(postService, Mockito.times(1)).deletePost(Mockito.anyLong());
 		Mockito.verify(postService, Mockito.only()).deletePost(Mockito.anyLong());
 		Mockito.verify(postService, Mockito.timeout(3000)).deletePost(Mockito.anyLong());
