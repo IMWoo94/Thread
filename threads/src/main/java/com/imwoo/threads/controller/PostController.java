@@ -44,7 +44,7 @@ public class PostController {
 	}
 
 	@PostMapping
-	public ResponseEntity<Post> createPost(
+	public ResponseEntity<PostResponse> createPost(
 		@RequestBody PostCreateRequest postCreateRequest) {
 		// Post 신규 생성
 		log.info("postController create before : {}", postCreateRequest.toString());

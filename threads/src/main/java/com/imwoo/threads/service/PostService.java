@@ -13,6 +13,7 @@ import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
 import com.imwoo.threads.model.PostResponse;
 import com.imwoo.threads.model.PostUpdateRequest;
+import com.imwoo.threads.model.entity.PostEntity;
 import com.imwoo.threads.repository.PostEntityRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -47,13 +48,12 @@ public class PostService {
 		return posts.stream().filter(post -> postId.equals(post.getPostId())).findFirst();
 	}
 
-	public Post createPost(PostCreateRequest postCreateRequest) {
-		Long newPostId = posts.stream().mapToLong(Post::getPostId).max().orElse(0L) + 1;
+	public PostResponse createPost(PostCreateRequest postCreateRequest) {
+		var postEntity = new PostEntity();
+		postEntity.setBody(postCreateRequest.body());
 
-		Post newPost = new Post(newPostId, postCreateRequest.body(), ZonedDateTime.now());
-		posts.add(newPost);
-
-		return newPost;
+		var savePostEntity = postEntityRepository.save(postEntity);
+		return PostResponse.from(savePostEntity);
 	}
 
 	public Post updatePost(Long postId, PostUpdateRequest postUpdateRequest) {
