@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
 import com.imwoo.threads.model.PostResponse;
 import com.imwoo.threads.model.PostUpdateRequest;
@@ -54,7 +53,7 @@ public class PostController {
 	}
 
 	@PatchMapping("/{postId}")
-	public ResponseEntity<Post> updatePost(
+	public ResponseEntity<PostResponse> updatePost(
 		@PathVariable Long postId,
 		@RequestBody PostUpdateRequest postUpdateRequest
 	) {

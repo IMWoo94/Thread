@@ -3,7 +3,6 @@ package com.imwoo.threads.service;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -44,10 +43,6 @@ public class PostService {
 				HttpStatus.NOT_FOUND, "Post not found."));
 	}
 
-	public Optional<Post> getPost(Long postId) {
-		return posts.stream().filter(post -> postId.equals(post.getPostId())).findFirst();
-	}
-
 	public PostResponse createPost(PostCreateRequest postCreateRequest) {
 		var postEntity = new PostEntity();
 		postEntity.setBody(postCreateRequest.body());
@@ -56,28 +51,22 @@ public class PostService {
 		return PostResponse.from(savePostEntity);
 	}
 
-	public Post updatePost(Long postId, PostUpdateRequest postUpdateRequest) {
-		Optional<Post> findPost = getPost(postId);
+	public PostResponse updatePost(Long postId, PostUpdateRequest postUpdateRequest) {
+		var postEntity = postEntityRepository.findById(postId)
+			.orElseThrow(() -> new ResponseStatusException(
+				HttpStatus.NOT_FOUND, "Post not found."));
 
-		findPost.ifPresentOrElse(
-			post -> post.setBody(postUpdateRequest.body()),
-			() -> {
-				throw new ResponseStatusException(
-					HttpStatus.NOT_FOUND, "Post not found.");
-			});
+		postEntity.setBody(postUpdateRequest.body());
+		postEntityRepository.save(postEntity);
 
-		return findPost.get();
+		return PostResponse.from(postEntity);
 	}
 
 	public void deletePost(Long postId) {
-		Optional<Post> findPost = getPost(postId);
+		var postEntity = postEntityRepository.findById(postId)
+			.orElseThrow(() -> new ResponseStatusException(
+				HttpStatus.NOT_FOUND, "Post not found."));
 
-		findPost.ifPresentOrElse(
-			posts::remove,
-			() -> {
-				throw new ResponseStatusException(
-					HttpStatus.NOT_FOUND, "Post not found.");
-			});
-
+		postEntityRepository.delete(postEntity);
 	}
 }
