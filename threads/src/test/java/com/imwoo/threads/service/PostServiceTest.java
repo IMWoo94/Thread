@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.imwoo.threads.model.PostCreateRequest;
 import com.imwoo.threads.model.PostResponse;
+import com.imwoo.threads.model.PostUpdateRequest;
 import com.imwoo.threads.model.entity.PostEntity;
 import com.imwoo.threads.repository.PostEntityRepository;
 
@@ -134,41 +135,99 @@ class PostServiceTest {
 		assertThat(post.postId()).isGreaterThan(0);
 		assertThat(post.body()).isEqualTo(body);
 	}
-	//
-	// @Test
-	// @DisplayName("Post 수정 성공 테스트")
-	// void updatePostOk() {
-	// 	var post = postService.getPostByPostId(1L);
-	// 	var updateBody = "body update context";
-	//
-	// 	Post updatePost = postService.updatePost(post.get().getPostId(), new PostUpdateRequest(updateBody));
-	//
-	// 	assertThat(updatePost.getBody()).isEqualTo(updateBody);
-	// }
-	//
-	// @Test
-	// @DisplayName("Post 수정 실패 테스트")
-	// void updatePostFail() {
-	// 	assertThatThrownBy(() -> postService.updatePost(999L, new PostUpdateRequest("body update context")))
-	// 		.isInstanceOf(ResponseStatusException.class)
-	// 		.hasMessage("%s %s", HttpStatus.NOT_FOUND, "\"Post not found.\"");
-	// }
-	//
-	// @Test
-	// @DisplayName("Post 삭제 성공 테스트")
-	// void deletePostOk() {
-	// 	var post = postService.getPostByPostId(1L);
-	// 	postService.deletePost(post.get().getPostId());
-	//
-	// 	assertThat(postService.getPostByPostId(1L)).isEmpty();
-	// }
-	//
-	// @Test
-	// @DisplayName("Post 삭제 실패 테스트")
-	// void deletePostFail() {
-	// 	assertThatThrownBy(() -> postService.deletePost(999L))
-	// 		.isInstanceOf(ResponseStatusException.class)
-	// 		.hasMessage("%s %s", HttpStatus.NOT_FOUND, "\"Post not found.\"");
-	// }
+
+	@Test
+	@DisplayName("Post 수정 성공 테스트")
+	void updatePostOk() {
+
+		// given
+		var body = "포스트 내용 변경";
+		var postRequest = new PostUpdateRequest(body);
+
+		Optional<PostEntity> mockTestPost = Optional.of(
+			new PostEntity(1L, "mock test body", ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		// mocking
+		when(postEntityRepository.findById(anyLong())).thenReturn(mockTestPost);
+		when(postEntityRepository.save(any(PostEntity.class))).thenReturn(mockTestPost.get());
+
+		// when
+		postService.updatePost(mockTestPost.get().getPostId(), postRequest);
+
+		// then
+		Mockito.verify(postEntityRepository, times(1)).findById(anyLong());
+		Mockito.verify(postEntityRepository, times(1)).save(any(PostEntity.class));
+		Mockito.verifyNoMoreInteractions(postEntityRepository);
+	}
+
+	@Test
+	@DisplayName("Post 수정 실패 테스트")
+	void updatePostFail() {
+		// given
+		// null
+
+		// mocking
+		when(postEntityRepository.findById(anyLong())).thenThrow(
+			new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found."));
+
+		// when
+
+		// then
+		assertThatThrownBy(() -> postService.updatePost(anyLong(), new PostUpdateRequest("mock test body")))
+			.isInstanceOf(ResponseStatusException.class)
+			.hasMessage("%s %s", HttpStatus.NOT_FOUND, "\"Post not found.\"");
+
+		Mockito.verify(postEntityRepository, times(1)).findById(anyLong());
+		Mockito.verify(postEntityRepository, only()).findById(anyLong());
+		Mockito.verifyNoMoreInteractions(postEntityRepository);
+	}
+
+	@Test
+	@DisplayName("Post 삭제 성공 테스트")
+	void deletePostOk() {
+		// given
+		Optional<PostEntity> mockTestPost = Optional.of(
+			new PostEntity(1L, "mock test body", ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		var nowDateTime = ZonedDateTime.now();
+		// mocking
+		when(postEntityRepository.findById(anyLong())).thenReturn(mockTestPost);
+		doAnswer(invocationOnMock -> {
+			mockTestPost.get().setDeletedDateTime(nowDateTime);
+			return null;
+		}).when(postEntityRepository).delete(any(PostEntity.class));
+
+		// when
+		postService.deletePost(mockTestPost.get().getPostId());
+
+		// then
+		assertThat(mockTestPost.get().getDeletedDateTime()).isNotNull();
+		assertThat(mockTestPost.get().getDeletedDateTime()).isEqualTo(nowDateTime);
+		Mockito.verify(postEntityRepository, times(1)).findById(anyLong());
+		Mockito.verify(postEntityRepository, times(1)).delete(any(PostEntity.class));
+		Mockito.verifyNoMoreInteractions(postEntityRepository);
+	}
+
+	@Test
+	@DisplayName("Post 삭제 실패 테스트")
+	void deletePostFail() {
+		// given
+		// null
+
+		// mocking
+		when(postEntityRepository.findById(anyLong())).thenThrow(
+			new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found."));
+
+		// when
+
+		// then
+		assertThatThrownBy(() -> postService.deletePost(anyLong()))
+			.isInstanceOf(ResponseStatusException.class)
+			.hasMessage("%s %s", HttpStatus.NOT_FOUND, "\"Post not found.\"");
+
+		Mockito.verify(postEntityRepository, times(1)).findById(anyLong());
+		Mockito.verify(postEntityRepository, only()).findById(anyLong());
+		Mockito.verifyNoMoreInteractions(postEntityRepository);
+	}
 
 }

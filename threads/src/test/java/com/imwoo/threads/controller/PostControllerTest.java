@@ -21,7 +21,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
 import com.imwoo.threads.model.PostResponse;
 import com.imwoo.threads.model.PostUpdateRequest;
@@ -102,7 +101,7 @@ class PostControllerTest {
 		var requestBody = readJson(new PostUpdateRequest("수정 포스트"));
 
 		Mockito.when(postService.updatePost(Mockito.anyLong(), Mockito.any()))
-			.thenReturn(new Post(1L, "수정 포스트", ZonedDateTime.now()));
+			.thenReturn(new PostResponse(1L, "test", ZonedDateTime.now(), ZonedDateTime.now(), null));
 
 		mockMvc.perform(
 			MockMvcRequestBuilders.patch(GET_POST_URL)
