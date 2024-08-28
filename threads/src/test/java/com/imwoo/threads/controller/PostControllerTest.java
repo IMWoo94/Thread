@@ -4,7 +4,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -22,8 +21,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
+import com.imwoo.threads.model.PostResponse;
 import com.imwoo.threads.model.PostUpdateRequest;
 import com.imwoo.threads.service.PostService;
 
@@ -53,17 +52,25 @@ class PostControllerTest {
 		mockMvc.perform(MockMvcRequestBuilders.get(BASIC_URL))
 			.andExpect(MockMvcResultMatchers.status().isOk())
 			.andExpect(MockMvcResultMatchers.content().contentType("application/json"));
+
+		Mockito.verify(postService, Mockito.times(1)).getPosts();
+		Mockito.verify(postService, Mockito.only()).getPosts();
+		Mockito.verify(postService, Mockito.timeout(3000)).getPosts();
 	}
 
 	@Test
 	@DisplayName("Post 단건 조회")
 	void getPostByPostId() throws Exception {
 		Mockito.when(postService.getPostByPostId(Mockito.anyLong()))
-			.thenReturn(Optional.of(new Post(1L, "test", ZonedDateTime.now())));
+			.thenReturn(new PostResponse(1L, "test", ZonedDateTime.now(), ZonedDateTime.now(), null));
 
 		mockMvc.perform(MockMvcRequestBuilders.get(GET_POST_URL))
 			.andExpect(MockMvcResultMatchers.status().isOk())
 			.andExpect(MockMvcResultMatchers.content().contentType("application/json"));
+
+		Mockito.verify(postService, Mockito.times(1)).getPostByPostId(Mockito.anyLong());
+		Mockito.verify(postService, Mockito.only()).getPostByPostId(Mockito.anyLong());
+		Mockito.verify(postService, Mockito.timeout(3000)).getPostByPostId(Mockito.anyLong());
 	}
 
 	@Test
@@ -73,7 +80,7 @@ class PostControllerTest {
 		var requestBody = readJson(new PostCreateRequest("신규 포스트 생성 테스트 데이터"));
 
 		Mockito.when(postService.createPost(Mockito.any()))
-			.thenReturn(new Post(1L, "test", ZonedDateTime.now()));
+			.thenReturn(new PostResponse(1L, "test", ZonedDateTime.now(), ZonedDateTime.now(), null));
 
 		mockMvc.perform(
 			MockMvcRequestBuilders.post(BASIC_URL)
@@ -81,6 +88,10 @@ class PostControllerTest {
 				.characterEncoding(StandardCharsets.UTF_8)
 				.content(requestBody)
 		).andExpect(MockMvcResultMatchers.status().isOk());
+
+		Mockito.verify(postService, Mockito.times(1)).createPost(Mockito.any());
+		Mockito.verify(postService, Mockito.only()).createPost(Mockito.any());
+		Mockito.verify(postService, Mockito.timeout(3000)).createPost(Mockito.any());
 	}
 
 	@Test
@@ -90,7 +101,7 @@ class PostControllerTest {
 		var requestBody = readJson(new PostUpdateRequest("수정 포스트"));
 
 		Mockito.when(postService.updatePost(Mockito.anyLong(), Mockito.any()))
-			.thenReturn(new Post(1L, "수정 포스트", ZonedDateTime.now()));
+			.thenReturn(new PostResponse(1L, "test", ZonedDateTime.now(), ZonedDateTime.now(), null));
 
 		mockMvc.perform(
 			MockMvcRequestBuilders.patch(GET_POST_URL)
@@ -98,6 +109,10 @@ class PostControllerTest {
 				.characterEncoding(StandardCharsets.UTF_8)
 				.content(requestBody)
 		).andExpect(MockMvcResultMatchers.status().isOk());
+
+		Mockito.verify(postService, Mockito.times(1)).updatePost(Mockito.anyLong(), Mockito.any());
+		Mockito.verify(postService, Mockito.only()).updatePost(Mockito.anyLong(), Mockito.any());
+		Mockito.verify(postService, Mockito.timeout(3000)).updatePost(Mockito.anyLong(), Mockito.any());
 	}
 
 	@Test
@@ -117,6 +132,10 @@ class PostControllerTest {
 			.andExpect(result -> {
 				Assertions.assertTrue(result.getResolvedException() instanceof ResponseStatusException);
 			});
+
+		Mockito.verify(postService, Mockito.times(1)).updatePost(Mockito.anyLong(), Mockito.any());
+		Mockito.verify(postService, Mockito.only()).updatePost(Mockito.anyLong(), Mockito.any());
+		Mockito.verify(postService, Mockito.timeout(3000)).updatePost(Mockito.anyLong(), Mockito.any());
 	}
 
 	@Test
@@ -130,6 +149,10 @@ class PostControllerTest {
 					.characterEncoding(StandardCharsets.UTF_8)
 			).andDo(print())
 			.andExpect(MockMvcResultMatchers.status().isNoContent());
+
+		Mockito.verify(postService, Mockito.times(1)).deletePost(Mockito.anyLong());
+		Mockito.verify(postService, Mockito.only()).deletePost(Mockito.anyLong());
+		Mockito.verify(postService, Mockito.timeout(3000)).deletePost(Mockito.anyLong());
 	}
 
 	@Test
@@ -147,6 +170,10 @@ class PostControllerTest {
 			.andExpect(result -> {
 				Assertions.assertTrue(result.getResolvedException() instanceof ResponseStatusException);
 			});
+
+		Mockito.verify(postService, Mockito.times(1)).deletePost(Mockito.anyLong());
+		Mockito.verify(postService, Mockito.only()).deletePost(Mockito.anyLong());
+		Mockito.verify(postService, Mockito.timeout(3000)).deletePost(Mockito.anyLong());
 	}
 
 }

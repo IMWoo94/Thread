@@ -3,7 +3,6 @@ package com.imwoo.threads.service;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -11,9 +10,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
+import com.imwoo.threads.model.PostResponse;
 import com.imwoo.threads.model.PostUpdateRequest;
+import com.imwoo.threads.model.entity.PostEntity;
+import com.imwoo.threads.repository.PostEntityRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class PostService {
 
 	// Controller 중복 부분 임시 Static 처리
@@ -26,46 +31,42 @@ public class PostService {
 		posts.add(new Post(3L, "Post 3", ZonedDateTime.now()));
 	}
 
-	public List<Post> getPosts() {
-		// TODO 차후 DB 정보 기반
-		return posts;
+	private final PostEntityRepository postEntityRepository;
+
+	public List<PostResponse> getPosts() {
+		return postEntityRepository.findAllPostResponseBy();
 	}
 
-	public Optional<Post> getPostByPostId(Long postId) {
-		return posts.stream().filter(post -> postId.equals(post.getPostId())).findFirst();
+	public PostResponse getPostByPostId(Long postId) {
+		return postEntityRepository.findByPostId(postId)
+			.orElseThrow(() -> new ResponseStatusException(
+				HttpStatus.NOT_FOUND, "Post not found."));
 	}
 
-	public Post createPost(PostCreateRequest postCreateRequest) {
-		Long newPostId = posts.stream().mapToLong(Post::getPostId).max().orElse(0L) + 1;
+	public PostResponse createPost(PostCreateRequest postCreateRequest) {
+		var postEntity = new PostEntity();
+		postEntity.setBody(postCreateRequest.body());
 
-		Post newPost = new Post(newPostId, postCreateRequest.body(), ZonedDateTime.now());
-		posts.add(newPost);
-
-		return newPost;
+		var savePostEntity = postEntityRepository.save(postEntity);
+		return PostResponse.from(savePostEntity);
 	}
 
-	public Post updatePost(Long postId, PostUpdateRequest postUpdateRequest) {
-		Optional<Post> findPost = getPostByPostId(postId);
+	public PostResponse updatePost(Long postId, PostUpdateRequest postUpdateRequest) {
+		var postEntity = postEntityRepository.findById(postId)
+			.orElseThrow(() -> new ResponseStatusException(
+				HttpStatus.NOT_FOUND, "Post not found."));
 
-		findPost.ifPresentOrElse(
-			post -> post.setBody(postUpdateRequest.body()),
-			() -> {
-				throw new ResponseStatusException(
-					HttpStatus.NOT_FOUND, "Post not found.");
-			});
+		postEntity.setBody(postUpdateRequest.body());
+		postEntityRepository.save(postEntity);
 
-		return findPost.get();
+		return PostResponse.from(postEntity);
 	}
 
 	public void deletePost(Long postId) {
-		Optional<Post> findPost = getPostByPostId(postId);
+		var postEntity = postEntityRepository.findById(postId)
+			.orElseThrow(() -> new ResponseStatusException(
+				HttpStatus.NOT_FOUND, "Post not found."));
 
-		findPost.ifPresentOrElse(
-			posts::remove,
-			() -> {
-				throw new ResponseStatusException(
-					HttpStatus.NOT_FOUND, "Post not found.");
-			});
-
+		postEntityRepository.delete(postEntity);
 	}
 }

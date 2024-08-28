@@ -1,7 +1,6 @@
 package com.imwoo.threads.controller;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.imwoo.threads.model.Post;
 import com.imwoo.threads.model.PostCreateRequest;
+import com.imwoo.threads.model.PostResponse;
 import com.imwoo.threads.model.PostUpdateRequest;
 import com.imwoo.threads.service.PostService;
 
@@ -32,23 +31,19 @@ public class PostController {
 	private final PostService postService;
 
 	@GetMapping
-	public ResponseEntity<List<Post>> getPosts() {
-		return new ResponseEntity<>(postService.getPosts(), HttpStatus.OK);
+	public ResponseEntity<List<PostResponse>> getPosts() {
+		return ResponseEntity.ok(postService.getPosts());
 	}
 
 	@GetMapping("{postId}")
-	public ResponseEntity<Post> getPostByPostId(
+	public ResponseEntity<PostResponse> getPostByPostId(
 		@PathVariable("postId") Long postId
 	) {
-		Optional<Post> matchingPost = postService.getPostByPostId(postId);
-		log.info("postController test : {}", matchingPost.toString());
-		return matchingPost
-			.map(ResponseEntity::ok)
-			.orElseGet(() -> ResponseEntity.notFound().build());
+		return ResponseEntity.ok(postService.getPostByPostId(postId));
 	}
 
 	@PostMapping
-	public ResponseEntity<Post> createPost(
+	public ResponseEntity<PostResponse> createPost(
 		@RequestBody PostCreateRequest postCreateRequest) {
 		// Post 신규 생성
 		log.info("postController create before : {}", postCreateRequest.toString());
@@ -58,7 +53,7 @@ public class PostController {
 	}
 
 	@PatchMapping("/{postId}")
-	public ResponseEntity<Post> updatePost(
+	public ResponseEntity<PostResponse> updatePost(
 		@PathVariable Long postId,
 		@RequestBody PostUpdateRequest postUpdateRequest
 	) {
