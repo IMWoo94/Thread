@@ -32,7 +32,7 @@ Threads 스타일의 SNS 를 만들어 보면서 외부적으로 많은 사용�
 
 ## 사용 스택
 
-#Java21 #Spring Boot 3.3.x #Spring 6.1.x
+#Java21 #Spring Boot 3.3.x #Spring 6.1.x #Spring Data JPA #PostgreSQL
 
 Doc : #Swagger #SpringDoc
 
@@ -48,10 +48,24 @@ Test : #JUnit5 #Mockito
   - [x] 영구적인 데이터 보관 불가
   - [x] 동시성 이슈 발생 가능
 - 해결 방안
-  - [ ] DB 연결
+  - [x] DB 연결
   - [ ] 가상 인프라 구축 
 
 - 1차 아키텍처를 좀 더 발전시켜서 진행을 해보자.
+
+### 2차 아키텍처
+![Threads_Architecture_v2](https://github.com/user-attachments/assets/39f76d65-b557-4627-b640-b285d58810d2)
+
+- 1차 아키텍처에서 부족한 부분을 보완하여 처리
+- 메모리를 사용한 데이터 저장을 RDBMS 를 활용하여 영구 저장
+  - PostgreSQL 을 사용하며 Application 과 DB 의 연결을 위해 Spring Data JPA 를 활용하여 연결
+
+### 왜? MySQL, PostgreSQL 에서 PostgreSQL 인가?
+- Threads와 같은 시스템에서의 복잡한 트랜잭션 처리, 비관계형 데이터의 효율적 관리, 높은 수준의 데이터 무결성 보장 등의 이유로 인해 PostgreSQL이 MySQL보다 더 적합 할 수 있다.<br> MySQL도 충분히 강력한 데이터베이스 시스템이지만, PostgreSQL의 고급 기능과 유연성이 이러한 구체적인 요구사항에 더 잘 부합하기 때문에 PostgreSQL을 선택
+  - 복잡한 트랜잭션 및 동시성 처리: <br>PostgreSQL의 MVCC 구현은 더 정교하게 설계되어, 다중 사용자 환경에서 높은 수준의 동시성 처리를 보장하면서도 데이터의 일관성을 유지. <br>특히, 복잡한 트랜잭션이 빈번하게 발생하는 Threads와 같은 소셜 네트워킹 시스템에서는 PostgreSQL의 안정적인 동시성 처리 능력이 큰 이점.
+  - 고급 데이터 타입 지원 및 유연성: <br>PostgreSQL은 JSONB와 같은 비관계형 데이터 타입을 효율적으로 처리할 수 있는 기능을 제공.<br> 이로 인해 구조화되지 않은 데이터를 다룰 때, 더 나은 성능과 유연성을 확보할 수 있습니다. <br>소셜 네트워크에서 사용자 생성 콘텐츠가 다양한 형식을 가질 수 있다는 점을 고려할 때, PostgreSQL의 이러한 기능은 중요한 이점.
+  - 데이터 무결성 및 확장성: <br>PostgreSQL은 데이터 무결성 제약 조건을 엄격하게 준수하며, 복잡한 데이터 모델링을 필요로 하는 애플리케이션에서 더 유연하고 강력한 데이터 무결성 보장을 제공. <br>또한, PostgreSQL의 확장성과 커스터마이징 가능성은 대규모 애플리케이션의 미래 확장 요구를 충족시킬 수 있습니다.
+ 
 
 ## 참고
 [인스타그램 백엔드가 20억 유저를 감당하는 방법!](https://www.youtube.com/watch?v=V27XkmVPqYQ&t=14s)
