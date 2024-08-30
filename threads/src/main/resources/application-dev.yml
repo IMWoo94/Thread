@@ -13,3 +13,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/threads-db
     username: threads-master
     password: 1234
+  security:
+    user:
+      name: admin
+      password: admin
