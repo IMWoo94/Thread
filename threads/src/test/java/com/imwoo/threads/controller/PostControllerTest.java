@@ -1,6 +1,7 @@
 package com.imwoo.threads.controller;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
@@ -207,6 +208,36 @@ class PostControllerTest {
 			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
 		mockMvc.perform(MockMvcRequestBuilders.delete(GET_POST_URL))
 			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
+	}
+
+	@Test
+	@DisplayName("Security CORS Test")
+	@WithMockAdmin
+	void requestAccessCORSFail() throws Exception {
+		// given
+
+		// when
+
+		// then
+		mockMvc.perform(MockMvcRequestBuilders.get(BASIC_URL)
+				.header("Origin", "https://non-baeldung.com"))
+			.andExpect(status().isForbidden())
+			.andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+	}
+
+	@Test
+	@DisplayName("Security CORS Test")
+	@WithMockAdmin
+	void requestAccessCORSOk() throws Exception {
+		// given
+
+		// when
+
+		// then
+		mockMvc.perform(MockMvcRequestBuilders.get(BASIC_URL)
+				.header("Origin", "https://testCors.com"))
+			.andExpect(status().isOk())
+			.andExpect(header().string("Access-Control-Allow-Origin", "https://testCors.com"));
 	}
 
 }
