@@ -208,10 +208,12 @@ class PostServiceTest {
 		// mocking
 		when(postEntityRepository.findById(anyLong())).thenReturn(findPostEntity);
 		doAnswer(invocationOnMock -> {
-			findPostEntity.get().setDeletedDateTime(deleteDateTime);
+			PostEntity entity = invocationOnMock.getArgument(0);
 
-			assertThat(findPostEntity.get().getDeletedDateTime()).isNotNull();
-			assertThat(findPostEntity.get().getDeletedDateTime()).isEqualTo(deleteDateTime);
+			entity.setDeletedDateTime(deleteDateTime);
+
+			assertThat(entity.getDeletedDateTime()).isNotNull();
+			assertThat(entity.getDeletedDateTime()).isEqualTo(deleteDateTime);
 
 			return null;
 		}).when(postEntityRepository).delete(any(PostEntity.class));
