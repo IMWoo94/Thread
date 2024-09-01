@@ -1,7 +1,6 @@
 package com.imwoo.threads.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,5 +11,4 @@ public interface PostEntityRepository extends JpaRepository<PostEntity, Long> {
 
 	List<PostResponse> findAllPostResponseBy();
 
-	Optional<PostResponse> findByPostId(Long postId);
 }
