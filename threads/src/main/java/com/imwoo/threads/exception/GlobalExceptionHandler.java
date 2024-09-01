@@ -10,7 +10,7 @@ import com.imwoo.threads.model.error.ClientErrorResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler(ClientErrorException.class)
+	@ExceptionHandler({ClientErrorException.class})
 	public ResponseEntity<ClientErrorResponse> handleClientErrorException(ClientErrorException e) {
 		return new ResponseEntity<>(
 			new ClientErrorResponse(e.getHttpStatus(), e.getMessage()),
