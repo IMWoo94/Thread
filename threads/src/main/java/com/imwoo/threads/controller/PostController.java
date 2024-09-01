@@ -32,6 +32,7 @@ public class PostController {
 
 	@GetMapping
 	public ResponseEntity<List<PostResponse>> getPosts() {
+		log.info("GET /api/v1/posts");
 		return ResponseEntity.ok(postService.getPosts());
 	}
 
@@ -39,16 +40,16 @@ public class PostController {
 	public ResponseEntity<PostResponse> getPostByPostId(
 		@PathVariable("postId") Long postId
 	) {
+		log.info("GET /api/v1/posts/{}", postId);
 		return ResponseEntity.ok(postService.getPostByPostId(postId));
 	}
 
 	@PostMapping
 	public ResponseEntity<PostResponse> createPost(
-		@RequestBody PostCreateRequest postCreateRequest) {
-		// Post 신규 생성
-		log.info("postController create before : {}", postCreateRequest.toString());
+		@RequestBody PostCreateRequest postCreateRequest
+	) {
+		log.info("POST /api/v1/posts request body : {}", postCreateRequest);
 		var post = postService.createPost(postCreateRequest);
-		log.info("postController create after : {}", post.toString());
 		return ResponseEntity.ok(post);
 	}
 
@@ -57,10 +58,8 @@ public class PostController {
 		@PathVariable Long postId,
 		@RequestBody PostUpdateRequest postUpdateRequest
 	) {
-		// Post 수정
-		log.info("postController update before : {}", postUpdateRequest.toString());
+		log.info("PATCH /api/v1/posts/{} request body : {}", postId, postUpdateRequest);
 		var post = postService.updatePost(postId, postUpdateRequest);
-		log.info("postController update after : {}", post.toString());
 		return ResponseEntity.ok(post);
 	}
 
@@ -68,7 +67,7 @@ public class PostController {
 	public ResponseEntity<Void> deletePost(
 		@PathVariable Long postId
 	) {
-		// Post 삭제
+		log.info("DELETE /api/v1/posts/{}", postId);
 		postService.deletePost(postId);
 		// NO_CONTENT(204, HttpStatus.Series.SUCCESSFUL, "No Content")
 		return ResponseEntity.noContent().build();
