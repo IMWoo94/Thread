@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.imwoo.threads.model.PostCreateRequest;
-import com.imwoo.threads.model.PostResponse;
-import com.imwoo.threads.model.PostUpdateRequest;
+import com.imwoo.threads.model.post.request.PostCreateRequest;
+import com.imwoo.threads.model.post.request.PostUpdateRequest;
+import com.imwoo.threads.model.post.response.PostResponse;
 import com.imwoo.threads.service.PostService;
 
 import lombok.RequiredArgsConstructor;

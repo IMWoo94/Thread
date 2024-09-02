@@ -26,9 +26,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imwoo.threads.common.context.support.annotation.WithMockAdmin;
 import com.imwoo.threads.config.TestWebSecurityConfiguration;
-import com.imwoo.threads.model.PostCreateRequest;
-import com.imwoo.threads.model.PostResponse;
-import com.imwoo.threads.model.PostUpdateRequest;
+import com.imwoo.threads.model.post.request.PostCreateRequest;
+import com.imwoo.threads.model.post.request.PostUpdateRequest;
+import com.imwoo.threads.model.post.response.PostResponse;
 import com.imwoo.threads.service.PostService;
 
 import lombok.extern.slf4j.Slf4j;

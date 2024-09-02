@@ -1,4 +1,4 @@
-package com.imwoo.threads.model;
+package com.imwoo.threads.model.post;
 
 import java.time.ZonedDateTime;
 import java.util.Objects;
