@@ -15,5 +15,5 @@ spring:
     password: 1234
   security:
     user:
-      name: admin
-      password: admin
+      name: board-admin
+      password: board-admin-password
