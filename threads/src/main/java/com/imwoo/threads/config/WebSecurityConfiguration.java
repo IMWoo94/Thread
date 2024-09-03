@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -25,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class WebSecurityConfiguration {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
-	
+
 	private List<String> DEFAULT_EXCLUDE = List.of(
 		"/",
 		"favicon.ico",
@@ -58,7 +59,11 @@ public class WebSecurityConfiguration {
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		// 모든 요청에 대해서 인증 처리를 진행 할 것이다.
 		http.authorizeHttpRequests((request) ->
-				request.anyRequest().authenticated()
+				request
+					.requestMatchers(HttpMethod.POST, "/api/v1/users")
+					.permitAll()
+					.anyRequest()
+					.authenticated()
 			)
 			.cors(Customizer.withDefaults())
 			// REST API 를 개발함으로 Session 관련 생성되지 않도록 처리
