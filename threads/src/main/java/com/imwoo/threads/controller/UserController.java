@@ -10,6 +10,7 @@ import com.imwoo.threads.model.user.User;
 import com.imwoo.threads.model.user.request.UserSignUpRequest;
 import com.imwoo.threads.service.UserService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -20,7 +21,7 @@ public class UserController {
 	private final UserService userService;
 
 	@PostMapping
-	public ResponseEntity<User> signUp(@RequestBody UserSignUpRequest userSignUpRequest) {
+	public ResponseEntity<User> signUp(@Valid @RequestBody UserSignUpRequest userSignUpRequest) {
 		var user = userService.signUp(
 			userSignUpRequest.username(),
 			userSignUpRequest.password()
