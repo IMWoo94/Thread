@@ -60,7 +60,7 @@ public class WebSecurityConfiguration {
 		// 모든 요청에 대해서 인증 처리를 진행 할 것이다.
 		http.authorizeHttpRequests((request) ->
 				request
-					.requestMatchers(HttpMethod.POST, "/api/v1/users")
+					.requestMatchers(HttpMethod.POST, "/api/v1/users", "/api/v1/users/authenticate")
 					.permitAll()
 					.anyRequest()
 					.authenticated()
