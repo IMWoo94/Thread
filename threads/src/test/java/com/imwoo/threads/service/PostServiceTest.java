@@ -19,10 +19,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.imwoo.threads.exception.post.PostCreatedFailureException;
 import com.imwoo.threads.exception.post.PostNotFoundException;
-import com.imwoo.threads.model.PostCreateRequest;
-import com.imwoo.threads.model.PostResponse;
-import com.imwoo.threads.model.PostUpdateRequest;
 import com.imwoo.threads.model.entity.PostEntity;
+import com.imwoo.threads.model.post.request.PostCreateRequest;
+import com.imwoo.threads.model.post.request.PostUpdateRequest;
+import com.imwoo.threads.model.post.response.PostResponse;
 import com.imwoo.threads.repository.PostEntityRepository;
 
 @ExtendWith(MockitoExtension.class)

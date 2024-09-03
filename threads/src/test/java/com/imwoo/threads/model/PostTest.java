@@ -7,6 +7,8 @@ import java.time.ZonedDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.imwoo.threads.model.post.Post;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
