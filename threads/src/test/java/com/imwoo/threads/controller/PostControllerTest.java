@@ -1,5 +1,7 @@
 package com.imwoo.threads.controller;
 
+import static com.imwoo.threads.config.TestWebSecurityConfiguration.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -14,22 +16,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imwoo.threads.common.context.support.annotation.WithMockAdmin;
 import com.imwoo.threads.config.TestWebSecurityConfiguration;
+import com.imwoo.threads.exception.post.PostNotFoundException;
 import com.imwoo.threads.model.post.request.PostCreateRequest;
 import com.imwoo.threads.model.post.request.PostUpdateRequest;
 import com.imwoo.threads.model.post.response.PostResponse;
+import com.imwoo.threads.service.JwtService;
 import com.imwoo.threads.service.PostService;
+import com.imwoo.threads.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,10 +42,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class PostControllerTest {
 
-	private final String BASIC_URL = "/api/v1/posts";
-	private final String GET_POST_URL = "/api/v1/posts/1";
+	private final static String CONTENT_TYPE_JSON = MediaType.APPLICATION_JSON_VALUE;
+	private final static String CHARSET_UTF8 = StandardCharsets.UTF_8.name();
 	@MockBean
 	private PostService postService;
+
+	/**
+	 * Jwt CustomFilter 등록에 의해서 MockBean 처리
+	 */
+	@MockBean
+	private JwtService jwtService;
+	@MockBean
+	private UserService userService;
 	@Autowired
 	private MockMvc mockMvc;
 
@@ -53,191 +65,260 @@ class PostControllerTest {
 	}
 
 	@Test
-	@DisplayName("Post 다건 조회")
+	@DisplayName("[Success] 전체 Post 조회 요청 테스트")
 	@WithMockAdmin
-	void getPosts() throws Exception {
-		mockMvc.perform(MockMvcRequestBuilders.get(BASIC_URL))
-			.andExpect(MockMvcResultMatchers.status().isOk())
-			.andExpect(MockMvcResultMatchers.content().contentType("application/json"));
+	void getMultiPostRequestTestSuccess() throws Exception {
+		// given
+		var url = "/api/v1/posts";
 
+		// when
+		mockMvc.perform(MockMvcRequestBuilders.get(url))
+			.andExpect(MockMvcResultMatchers.status().isOk())
+			.andExpect(MockMvcResultMatchers.content().contentType(CONTENT_TYPE_JSON));
+
+		// then
 		Mockito.verify(postService, Mockito.times(1)).getPosts();
 		Mockito.verify(postService, Mockito.only()).getPosts();
 		Mockito.verify(postService, Mockito.timeout(3000)).getPosts();
 	}
 
 	@Test
-	@DisplayName("Post 단건 조회")
+	@DisplayName("[Success] 단건 Post 조회 요청 테스트")
 	@WithMockAdmin
-	void getPostByPostId() throws Exception {
-		Mockito.when(postService.getPostByPostId(Mockito.anyLong()))
+	void getSinglePostRequestTestSuccess() throws Exception {
+		// given
+		var url = "/api/v1/posts/1";
+
+		// mocking
+		Mockito.when(postService.getPostByPostId(anyLong()))
 			.thenReturn(new PostResponse(1L, "test", ZonedDateTime.now(), ZonedDateTime.now(), null));
 
-		mockMvc.perform(MockMvcRequestBuilders.get(GET_POST_URL))
+		// when
+		mockMvc.perform(MockMvcRequestBuilders.get(url))
 			.andExpect(MockMvcResultMatchers.status().isOk())
-			.andExpect(MockMvcResultMatchers.content().contentType("application/json"));
+			.andExpect(MockMvcResultMatchers.content().contentType(CONTENT_TYPE_JSON));
 
-		Mockito.verify(postService, Mockito.times(1)).getPostByPostId(Mockito.anyLong());
-		Mockito.verify(postService, Mockito.only()).getPostByPostId(Mockito.anyLong());
-		Mockito.verify(postService, Mockito.timeout(3000)).getPostByPostId(Mockito.anyLong());
+		// then
+		Mockito.verify(postService, Mockito.times(1)).getPostByPostId(anyLong());
+		Mockito.verify(postService, Mockito.only()).getPostByPostId(anyLong());
+		Mockito.verify(postService, Mockito.timeout(3000)).getPostByPostId(anyLong());
 	}
 
 	@Test
-	@DisplayName("Post 신규 생성")
+	@DisplayName("[Success] Post 신규 생성 요청 테스트")
 	@WithMockAdmin
-	void newPostCreated() throws Exception {
+	void newCreatePostRequestTestSuccess() throws Exception {
+		// given
 		var requestBody = readJson(new PostCreateRequest("신규 포스트 생성 테스트 데이터"));
+		var url = "/api/v1/posts";
 
-		Mockito.when(postService.createPost(Mockito.any()))
+		// mocking
+		Mockito.when(postService.createPost(any()))
 			.thenReturn(new PostResponse(1L, "test", ZonedDateTime.now(), ZonedDateTime.now(), null));
 
+		// when
 		mockMvc.perform(
-			MockMvcRequestBuilders.post(BASIC_URL)
-				.contentType(MediaType.APPLICATION_JSON)
-				.characterEncoding(StandardCharsets.UTF_8)
+			MockMvcRequestBuilders.post(url)
+				.contentType(CONTENT_TYPE_JSON)
+				.characterEncoding(CHARSET_UTF8)
 				.content(requestBody)
 		).andExpect(MockMvcResultMatchers.status().isOk());
 
+		// then
 		Mockito.verify(postService, Mockito.times(1)).createPost(Mockito.any());
 		Mockito.verify(postService, Mockito.only()).createPost(Mockito.any());
 		Mockito.verify(postService, Mockito.timeout(3000)).createPost(Mockito.any());
 	}
 
 	@Test
-	@DisplayName("Post 수정 성공")
+	@DisplayName("[Failure] Post 신규 생성 요청 테스트")
 	@WithMockAdmin
-	void updatePostOk() throws Exception {
+	void newCreatePostRequestTestFailure() throws Exception {
+		// given
+		var requestBody = readJson(new PostCreateRequest("신규 포스트 생성 테스트 데이터"));
+		var url = "/api/v1/posts";
 
+		// mocking
+		Mockito.when(postService.createPost(any()))
+			.thenThrow(new PostNotFoundException());
+
+		// when
+		mockMvc.perform(
+			MockMvcRequestBuilders.post(url)
+				.contentType(CONTENT_TYPE_JSON)
+				.characterEncoding(CHARSET_UTF8)
+				.content(requestBody)
+		).andExpect(result -> {
+			Assertions.assertInstanceOf(PostNotFoundException.class, result.getResolvedException());
+		});
+
+		// then
+		Mockito.verify(postService, Mockito.times(1)).createPost(Mockito.any());
+		Mockito.verify(postService, Mockito.only()).createPost(Mockito.any());
+		Mockito.verify(postService, Mockito.timeout(3000)).createPost(Mockito.any());
+	}
+
+	@Test
+	@DisplayName("[Success] Post 수정 요청 테스트")
+	@WithMockAdmin
+	void updatedPostRequestTestSuccess() throws Exception {
+		// given
 		var requestBody = readJson(new PostUpdateRequest("수정 포스트"));
+		var url = "/api/v1/posts/";
 
-		Mockito.when(postService.updatePost(Mockito.anyLong(), Mockito.any()))
+		// mocking
+		Mockito.when(postService.updatePost(anyLong(), any()))
 			.thenReturn(new PostResponse(1L, "test", ZonedDateTime.now(), ZonedDateTime.now(), null));
 
+		// when
 		mockMvc.perform(
-			MockMvcRequestBuilders.patch(GET_POST_URL)
-				.contentType(MediaType.APPLICATION_JSON)
-				.characterEncoding(StandardCharsets.UTF_8)
+			MockMvcRequestBuilders.patch(url + 1)
+				.contentType(CONTENT_TYPE_JSON)
+				.characterEncoding(CHARSET_UTF8)
 				.content(requestBody)
 		).andExpect(MockMvcResultMatchers.status().isOk());
 
-		Mockito.verify(postService, Mockito.times(1)).updatePost(Mockito.anyLong(), Mockito.any());
-		Mockito.verify(postService, Mockito.only()).updatePost(Mockito.anyLong(), Mockito.any());
-		Mockito.verify(postService, Mockito.timeout(3000)).updatePost(Mockito.anyLong(), Mockito.any());
+		// then
+		Mockito.verify(postService, Mockito.times(1)).updatePost(anyLong(), Mockito.any());
+		Mockito.verify(postService, Mockito.only()).updatePost(anyLong(), Mockito.any());
+		Mockito.verify(postService, Mockito.timeout(3000)).updatePost(anyLong(), Mockito.any());
 	}
 
 	@Test
-	@DisplayName("Post 수정 실패")
+	@DisplayName("[Failure] Post 수정 요청 테스트")
 	@WithMockAdmin
-	void updatePostFail() throws Exception {
+	void updatedPostRequestTestFailure() throws Exception {
+		// given
 		var requestBody = readJson(new PostUpdateRequest("수정 포스트"));
+		var url = "/api/v1/posts/";
 
-		Mockito.when(postService.updatePost(Mockito.anyLong(), Mockito.any()))
-			.thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found."));
+		// mocking
+		Mockito.when(postService.updatePost(anyLong(), any()))
+			.thenThrow(new PostNotFoundException());
 
+		// when
 		mockMvc.perform(
-				MockMvcRequestBuilders.patch(GET_POST_URL)
-					.contentType(MediaType.APPLICATION_JSON)
-					.characterEncoding(StandardCharsets.UTF_8)
+				MockMvcRequestBuilders.patch(url + 1)
+					.contentType(CONTENT_TYPE_JSON)
+					.characterEncoding(CHARSET_UTF8)
 					.content(requestBody)
 			).andDo(print())
 			.andExpect(result -> {
-				Assertions.assertTrue(result.getResolvedException() instanceof ResponseStatusException);
+				Assertions.assertInstanceOf(PostNotFoundException.class, result.getResolvedException());
 			});
 
-		Mockito.verify(postService, Mockito.times(1)).updatePost(Mockito.anyLong(), Mockito.any());
-		Mockito.verify(postService, Mockito.only()).updatePost(Mockito.anyLong(), Mockito.any());
-		Mockito.verify(postService, Mockito.timeout(3000)).updatePost(Mockito.anyLong(), Mockito.any());
+		// then
+		Mockito.verify(postService, Mockito.times(1)).updatePost(anyLong(), Mockito.any());
+		Mockito.verify(postService, Mockito.only()).updatePost(anyLong(), Mockito.any());
+		Mockito.verify(postService, Mockito.timeout(3000)).updatePost(anyLong(), Mockito.any());
 	}
 
 	@Test
-	@DisplayName("Post 삭제 성공")
+	@DisplayName("[Success] Post 삭제 요청 테스트")
 	@WithMockAdmin
-	void deletePostOk() throws Exception {
-		Mockito.doNothing().when(postService).deletePost(Mockito.anyLong());
+	void deletedPostRequestTestSuccess() throws Exception {
+		// given
+		var url = "/api/v1/posts/";
 
+		// mocking
+		Mockito.doNothing()
+			.when(postService)
+			.deletePost(anyLong());
+
+		// when
 		mockMvc.perform(
-				MockMvcRequestBuilders.delete(GET_POST_URL)
-					.contentType(MediaType.APPLICATION_JSON)
-					.characterEncoding(StandardCharsets.UTF_8)
+				MockMvcRequestBuilders.delete(url + anyLong())
+					.contentType(CONTENT_TYPE_JSON)
+					.characterEncoding(CHARSET_UTF8)
 			).andDo(print())
 			.andExpect(MockMvcResultMatchers.status().isNoContent());
 
-		Mockito.verify(postService, Mockito.times(1)).deletePost(Mockito.anyLong());
-		Mockito.verify(postService, Mockito.only()).deletePost(Mockito.anyLong());
-		Mockito.verify(postService, Mockito.timeout(3000)).deletePost(Mockito.anyLong());
+		// then
+		Mockito.verify(postService, Mockito.times(1)).deletePost(anyLong());
+		Mockito.verify(postService, Mockito.only()).deletePost(anyLong());
+		Mockito.verify(postService, Mockito.timeout(3000)).deletePost(anyLong());
 	}
 
 	@Test
-	@DisplayName("Post 삭제 실패")
+	@DisplayName("[Failure] Post 삭제 요청 테스트")
 	@WithMockAdmin
-	void deletePostFail() throws Exception {
-		Mockito.doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found."))
-			.when(postService)
-			.deletePost(Mockito.anyLong());
+	void deletedPostRequestTestFailure() throws Exception {
+		// given
+		var url = "/api/v1/posts/";
 
+		// mocking
+		Mockito.doThrow(new PostNotFoundException())
+			.when(postService)
+			.deletePost(anyLong());
+
+		// when
 		mockMvc.perform(
-				MockMvcRequestBuilders.delete(GET_POST_URL)
-					.contentType(MediaType.APPLICATION_JSON)
-					.characterEncoding(StandardCharsets.UTF_8)
+				MockMvcRequestBuilders.delete(url + anyLong())
+					.contentType(CONTENT_TYPE_JSON)
+					.characterEncoding(CHARSET_UTF8)
 			).andDo(print())
 			.andExpect(result -> {
-				Assertions.assertTrue(result.getResolvedException() instanceof ResponseStatusException);
+				Assertions.assertInstanceOf(PostNotFoundException.class, result.getResolvedException());
 			});
 
-		Mockito.verify(postService, Mockito.times(1)).deletePost(Mockito.anyLong());
-		Mockito.verify(postService, Mockito.only()).deletePost(Mockito.anyLong());
-		Mockito.verify(postService, Mockito.timeout(3000)).deletePost(Mockito.anyLong());
+		// then
+		Mockito.verify(postService, Mockito.times(1)).deletePost(anyLong());
+		Mockito.verify(postService, Mockito.only()).deletePost(anyLong());
+		Mockito.verify(postService, Mockito.timeout(3000)).deletePost(anyLong());
 	}
 
 	@Test
-	@DisplayName("Security Authorization Fail")
+	@DisplayName("[Failure] Authorization 요청 테스트")
 	@WithAnonymousUser
-	void requestAccessDenied401() throws Exception {
+	void authorizationRequestAccessDenied401() throws Exception {
 		// given
+		var url = "/api/v1/posts";
 
 		// when
+		mockMvc.perform(MockMvcRequestBuilders.get(url))
+			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
+		mockMvc.perform(MockMvcRequestBuilders.post(url))
+			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
+		mockMvc.perform(MockMvcRequestBuilders.patch(url + 1))
+			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
+		mockMvc.perform(MockMvcRequestBuilders.delete(url + 1))
+			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
 
 		// then
-		// 조회
-		mockMvc.perform(MockMvcRequestBuilders.get(BASIC_URL))
-			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
-
-		// CUD
-		mockMvc.perform(MockMvcRequestBuilders.post(BASIC_URL))
-			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
-		mockMvc.perform(MockMvcRequestBuilders.patch(GET_POST_URL))
-			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
-		mockMvc.perform(MockMvcRequestBuilders.delete(GET_POST_URL))
-			.andExpect(MockMvcResultMatchers.status().isUnauthorized());
 	}
 
 	@Test
-	@DisplayName("Security CORS Test")
+	@DisplayName("[Success] CORS 요청 테스트")
 	@WithMockAdmin
-	void requestAccessCORSFail() throws Exception {
+	void CORSRequestAccessSuccess() throws Exception {
 		// given
+		var url = "/api/v1/posts";
+		var origin = ORIGIN_URL;
 
 		// when
-
-		// then
-		mockMvc.perform(MockMvcRequestBuilders.get(BASIC_URL)
-				.header("Origin", "https://non-baeldung.com"))
-			.andExpect(status().isForbidden())
-			.andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
-	}
-
-	@Test
-	@DisplayName("Security CORS Test")
-	@WithMockAdmin
-	void requestAccessCORSOk() throws Exception {
-		// given
-
-		// when
-
-		// then
-		mockMvc.perform(MockMvcRequestBuilders.get(BASIC_URL)
-				.header("Origin", "https://testCors.com"))
+		mockMvc.perform(MockMvcRequestBuilders.get(url)
+				.header(HttpHeaders.ORIGIN, origin))
 			.andExpect(status().isOk())
-			.andExpect(header().string("Access-Control-Allow-Origin", "https://testCors.com"));
+			.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
+
+		// then
+	}
+
+	@Test
+	@DisplayName("[Failure] CORS 요청 테스트")
+	@WithMockAdmin
+	void CORSRequestAccessFailure() throws Exception {
+		// given
+		var url = "/api/v1/posts";
+		var origin = "https://non-baeldung.com";
+
+		// when
+		mockMvc.perform(MockMvcRequestBuilders.get(url)
+				.header(HttpHeaders.ORIGIN, origin))
+			.andExpect(status().isForbidden())
+			.andExpect(header().doesNotExist(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+
+		// then
 	}
 
 }
