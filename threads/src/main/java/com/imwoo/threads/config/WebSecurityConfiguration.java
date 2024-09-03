@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -14,6 +15,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.imwoo.threads.filter.JwtAuthenticationFilter;
+import com.imwoo.threads.filter.JwtExceptionFilter;
+
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -21,7 +25,23 @@ import lombok.RequiredArgsConstructor;
 public class WebSecurityConfiguration {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
-	private final JwtExceptionFilter jwtExceptionFilter;
+	
+	private List<String> DEFAULT_EXCLUDE = List.of(
+		"/",
+		"favicon.ico",
+		"/error"
+	);
+	private List<String> SWAGGER = List.of(
+		"/swagger-ui/**",
+		"/swagger-ut/**",
+		"/v3/api-docs/**"
+	);
+
+	@Bean
+	public WebSecurityCustomizer webSecurityCustomizer() {
+		return (web) -> web.ignoring().requestMatchers(SWAGGER.toArray(new String[0]))
+			.requestMatchers(DEFAULT_EXCLUDE.toArray(new String[0]));
+	}
 
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
@@ -37,7 +57,9 @@ public class WebSecurityConfiguration {
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		// 모든 요청에 대해서 인증 처리를 진행 할 것이다.
-		http.authorizeHttpRequests((request) -> request.anyRequest().authenticated())
+		http.authorizeHttpRequests((request) ->
+				request.anyRequest().authenticated()
+			)
 			.cors(Customizer.withDefaults())
 			// REST API 를 개발함으로 Session 관련 생성되지 않도록 처리
 			.sessionManagement(
@@ -45,7 +67,7 @@ public class WebSecurityConfiguration {
 			// csrf 검증은 제외
 			.csrf(CsrfConfigurer::disable)
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-			.addFilterBefore(jwtExceptionFilter, JwtAuthenticationFilter.class)
+			.addFilterBefore(new JwtExceptionFilter(), JwtAuthenticationFilter.class)
 			// 기본 인증 방식을 사용
 			.httpBasic(Customizer.withDefaults());
 
