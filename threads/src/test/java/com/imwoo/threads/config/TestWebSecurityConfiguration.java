@@ -3,6 +3,7 @@ package com.imwoo.threads.config;
 import java.util.List;
 
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -19,6 +20,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.imwoo.threads.filter.JwtAuthenticationFilter;
 import com.imwoo.threads.filter.JwtExceptionFilter;
+import com.imwoo.threads.service.JwtService;
+import com.imwoo.threads.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +30,13 @@ import lombok.RequiredArgsConstructor;
 public class TestWebSecurityConfiguration {
 	public static final String ORIGIN_URL = "https://testCors.com";
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+	/**
+	 * Jwt CustomFilter 등록에 의해서 MockBean 처리
+	 */
+	@MockBean
+	private JwtService jwtService;
+	@MockBean
+	private UserService userService;
 	private List<String> DEFAULT_EXCLUDE = List.of(
 		"/",
 		"favicon.ico",

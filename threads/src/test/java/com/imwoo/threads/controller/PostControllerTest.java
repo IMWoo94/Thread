@@ -31,9 +31,7 @@ import com.imwoo.threads.exception.post.PostNotFoundException;
 import com.imwoo.threads.model.post.request.PostCreateRequest;
 import com.imwoo.threads.model.post.request.PostUpdateRequest;
 import com.imwoo.threads.model.post.response.PostResponse;
-import com.imwoo.threads.service.JwtService;
 import com.imwoo.threads.service.PostService;
-import com.imwoo.threads.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,13 +45,6 @@ class PostControllerTest {
 	@MockBean
 	private PostService postService;
 
-	/**
-	 * Jwt CustomFilter 등록에 의해서 MockBean 처리
-	 */
-	@MockBean
-	private JwtService jwtService;
-	@MockBean
-	private UserService userService;
 	@Autowired
 	private MockMvc mockMvc;
 
