@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.imwoo.threads.exception.post.PostCreatedFailureException;
 import com.imwoo.threads.exception.post.PostNotFoundException;
 import com.imwoo.threads.model.entity.PostEntity;
+import com.imwoo.threads.model.entity.UserEntity;
 import com.imwoo.threads.model.post.request.PostCreateRequest;
 import com.imwoo.threads.model.post.request.PostUpdateRequest;
 import com.imwoo.threads.model.post.response.PostResponse;
@@ -47,7 +48,6 @@ class PostServiceTest {
 		var posts = postService.getPosts();
 
 		// then
-		verify(postEntityRepository, times(1)).findAllPostResponseBy();
 		verify(postEntityRepository, only()).findAllPostResponseBy();
 		verify(postEntityRepository, timeout(3000)).findAllPostResponseBy();
 
@@ -68,7 +68,6 @@ class PostServiceTest {
 		PostResponse post = postService.getPostByPostId(postId);
 
 		// then
-		verify(postEntityRepository, times(1)).findById(anyLong());
 		verify(postEntityRepository, only()).findById(anyLong());
 		verify(postEntityRepository, timeout(3000)).findById(anyLong());
 
@@ -90,7 +89,6 @@ class PostServiceTest {
 		assertThatThrownBy(() -> postService.getPostByPostId(anyLong()))
 			.isInstanceOf(PostNotFoundException.class);
 
-		verify(postEntityRepository, times(1)).findById(anyLong());
 		verify(postEntityRepository, only()).findById(anyLong());
 		verify(postEntityRepository, timeout(3000)).findById(anyLong());
 
@@ -102,19 +100,20 @@ class PostServiceTest {
 	void newCreatePostServiceTestSuccess() {
 		// given
 		var body = "new created post test body";
-		var postEntity = new PostEntity();
+		var userEntity = new UserEntity(1L, "admin", "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
+			null);
+		var postEntity = PostEntity.of(body, userEntity);
 
 		// mocking
 		when(postEntityRepository.save(any(PostEntity.class))).thenReturn(postEntity);
 
 		// when
-		var newPost = postService.createPost(new PostCreateRequest(body));
+		var newPost = postService.createPost(new PostCreateRequest(body), userEntity);
 
 		// then
 		assertThat(newPost).isNotNull();
 		assertThat(newPost.body()).isEqualTo(body);
 
-		verify(postEntityRepository, times(1)).save(any(PostEntity.class));
 		verify(postEntityRepository, only()).save(any(PostEntity.class));
 		verify(postEntityRepository, timeout(3000)).save(any(PostEntity.class));
 
@@ -134,10 +133,9 @@ class PostServiceTest {
 		// when
 
 		// then
-		assertThatThrownBy(() -> postService.createPost(new PostCreateRequest(body)))
+		assertThatThrownBy(() -> postService.createPost(new PostCreateRequest(body), null))
 			.isInstanceOf(PostCreatedFailureException.class);
 
-		verify(postEntityRepository, times(1)).save(any(PostEntity.class));
 		verify(postEntityRepository, only()).save(any(PostEntity.class));
 		verify(postEntityRepository, timeout(3000)).save(any(PostEntity.class));
 
