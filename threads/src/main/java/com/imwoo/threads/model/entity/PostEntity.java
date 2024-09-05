@@ -64,6 +64,13 @@ public class PostEntity {
 	@JoinColumn(name = "userId", foreignKey = @ForeignKey(name = "fk_post_to_user"))
 	private UserEntity user;
 
+	public static PostEntity of(String body, UserEntity user) {
+		PostEntity post = new PostEntity();
+		post.body = body;
+		post.user = user;
+		return post;
+	}
+
 	@PrePersist
 	private void prePersist() {
 		this.createdDateTime = ZonedDateTime.now();

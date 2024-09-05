@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.imwoo.threads.exception.post.PostCreatedFailureException;
 import com.imwoo.threads.exception.post.PostNotFoundException;
 import com.imwoo.threads.model.entity.PostEntity;
+import com.imwoo.threads.model.entity.UserEntity;
 import com.imwoo.threads.model.post.request.PostCreateRequest;
 import com.imwoo.threads.model.post.request.PostUpdateRequest;
 import com.imwoo.threads.model.post.response.PostResponse;
@@ -33,11 +34,9 @@ public class PostService {
 	}
 
 	// 생성
-	public PostResponse createPost(PostCreateRequest postCreateRequest) {
+	public PostResponse createPost(PostCreateRequest postCreateRequest, UserEntity userEntity) {
 		try {
-			var postEntity = new PostEntity();
-			postEntity.setBody(postCreateRequest.body());
-
+			var postEntity = PostEntity.of(postCreateRequest.body(), userEntity);
 			postEntityRepository.save(postEntity);
 
 			return PostResponse.from(postEntity);

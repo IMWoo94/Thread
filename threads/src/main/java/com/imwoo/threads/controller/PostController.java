@@ -3,6 +3,7 @@ package com.imwoo.threads.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.imwoo.threads.model.entity.UserEntity;
 import com.imwoo.threads.model.post.request.PostCreateRequest;
 import com.imwoo.threads.model.post.request.PostUpdateRequest;
 import com.imwoo.threads.model.post.response.PostResponse;
@@ -44,10 +46,11 @@ public class PostController {
 
 	@PostMapping
 	public ResponseEntity<PostResponse> createPost(
-		@RequestBody PostCreateRequest postCreateRequest
+		@RequestBody PostCreateRequest postCreateRequest,
+		Authentication authentication
 	) {
 		log.info("POST /api/v1/posts request body : {}", postCreateRequest);
-		var post = postService.createPost(postCreateRequest);
+		var post = postService.createPost(postCreateRequest, (UserEntity)authentication.getPrincipal());
 		return ResponseEntity.ok(post);
 	}
 
