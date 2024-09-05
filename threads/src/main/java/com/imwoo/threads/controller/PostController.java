@@ -57,19 +57,21 @@ public class PostController {
 	@PatchMapping("/{postId}")
 	public ResponseEntity<PostResponse> updatePost(
 		@PathVariable Long postId,
-		@RequestBody PostUpdateRequest postUpdateRequest
+		@RequestBody PostUpdateRequest postUpdateRequest,
+		Authentication authentication
 	) {
 		log.info("PATCH /api/v1/posts/{} request body : {}", postId, postUpdateRequest);
-		var post = postService.updatePost(postId, postUpdateRequest);
+		var post = postService.updatePost(postId, postUpdateRequest, (UserEntity)authentication.getPrincipal());
 		return ResponseEntity.ok(post);
 	}
 
 	@DeleteMapping("/{postId}")
 	public ResponseEntity<Void> deletePost(
-		@PathVariable Long postId
+		@PathVariable Long postId,
+		Authentication authentication
 	) {
 		log.info("DELETE /api/v1/posts/{}", postId);
-		postService.deletePost(postId);
+		postService.deletePost(postId, (UserEntity)authentication.getPrincipal());
 		// NO_CONTENT(204, HttpStatus.Series.SUCCESSFUL, "No Content")
 		return ResponseEntity.noContent().build();
 	}
