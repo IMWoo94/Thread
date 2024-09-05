@@ -151,7 +151,7 @@ class PostServiceTest {
 		// given
 		var body = "modified post test body";
 		Optional<PostEntity> mockTestPost = Optional.of(
-			new PostEntity(null, body, ZonedDateTime.now(), ZonedDateTime.now(), null));
+			new PostEntity(null, body, ZonedDateTime.now(), ZonedDateTime.now(), null, null));
 
 		// mocking
 		when(postEntityRepository.findById(anyLong())).thenReturn(mockTestPost);
@@ -203,7 +203,7 @@ class PostServiceTest {
 		// given
 		var deleteDateTime = ZonedDateTime.now();
 		Optional<PostEntity> findPostEntity = Optional.of(
-			new PostEntity(null, null, ZonedDateTime.now(), ZonedDateTime.now(), null));
+			new PostEntity(null, null, ZonedDateTime.now(), ZonedDateTime.now(), null, null));
 
 		// mocking
 		when(postEntityRepository.findById(anyLong())).thenReturn(findPostEntity);
