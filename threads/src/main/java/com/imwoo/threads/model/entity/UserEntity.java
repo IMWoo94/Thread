@@ -16,6 +16,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -30,7 +31,8 @@ import lombok.NoArgsConstructor;
  * 그 이유는 postgreSQL 에서는 user 라는 예약어가 존재한다.
  * 예약어를 사용하는 것이 아닌 user 라는 단어를 사용한다는 것은 인식하기 위해 적용
  */
-@Table(name = "\"user\"")
+@Table(name = "\"user\"",
+	indexes = {@Index(name = "user_username_idx", columnList = "username", unique = true)})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
