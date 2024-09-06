@@ -7,7 +7,6 @@ import static org.mockito.Mockito.*;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -19,16 +18,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.imwoo.threads.exception.post.PostCreatedFailureException;
 import com.imwoo.threads.exception.post.PostNotFoundException;
+import com.imwoo.threads.exception.user.UserNotAllowedException;
 import com.imwoo.threads.model.entity.PostEntity;
 import com.imwoo.threads.model.entity.UserEntity;
 import com.imwoo.threads.model.post.request.PostCreateRequest;
 import com.imwoo.threads.model.post.request.PostUpdateRequest;
-import com.imwoo.threads.model.post.response.PostResponse;
 import com.imwoo.threads.repository.PostEntityRepository;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
 
+	private final static UserEntity AUTHORIZED_USER = new UserEntity(1L, "admin", "admin", null, null,
+		ZonedDateTime.now(),
+		ZonedDateTime.now(),
+		null);
+	private final static UserEntity OTHER_USER = new UserEntity(2L, "other", "other", null, null,
+		ZonedDateTime.now(),
+		ZonedDateTime.now(),
+		null);
 	@InjectMocks
 	private PostService postService;
 	@Mock
@@ -38,18 +45,18 @@ class PostServiceTest {
 	@DisplayName("[Success] 전체 Post 조회 서비스 테스트")
 	void getMultiPostServiceTestSuccess() {
 		// given
-		List<PostResponse> postResponseList = new ArrayList<PostResponse>();
+		var postEntities = new ArrayList<PostEntity>();
 
 		// mocking
-		when(postEntityRepository.findAllPostResponseBy())
-			.thenReturn(postResponseList);
+		when(postEntityRepository.findAll())
+			.thenReturn(postEntities);
 
 		// when
-		var posts = postService.getPosts();
+		postService.getPosts();
 
 		// then
-		verify(postEntityRepository, only()).findAllPostResponseBy();
-		verify(postEntityRepository, timeout(3000)).findAllPostResponseBy();
+		verify(postEntityRepository, only()).findAll();
+		verify(postEntityRepository, timeout(3000)).findAll();
 
 		verifyNoMoreInteractions(postEntityRepository);
 	}
@@ -58,14 +65,15 @@ class PostServiceTest {
 	@DisplayName("[Success] 단건 Post 조회 서비스 테스트")
 	void getSinglePostServiceTestSuccess() {
 		// given
-		PostEntity postEntity = new PostEntity();
+		var postEntity = PostEntity.of("", AUTHORIZED_USER);
 		var postId = anyLong();
 
 		// mocking
-		when(postEntityRepository.findById(postId)).thenReturn(Optional.of(postEntity));
+		when(postEntityRepository.findById(postId))
+			.thenReturn(Optional.of(postEntity));
 
 		// when
-		PostResponse post = postService.getPostByPostId(postId);
+		postService.getPostByPostId(postId);
 
 		// then
 		verify(postEntityRepository, only()).findById(anyLong());
@@ -81,7 +89,8 @@ class PostServiceTest {
 		var postId = anyLong();
 
 		// mocking
-		when(postEntityRepository.findById(postId)).thenThrow(new PostNotFoundException(postId));
+		when(postEntityRepository.findById(postId))
+			.thenThrow(new PostNotFoundException(postId));
 
 		// when
 
@@ -100,15 +109,14 @@ class PostServiceTest {
 	void newCreatePostServiceTestSuccess() {
 		// given
 		var body = "new created post test body";
-		var userEntity = new UserEntity(1L, "admin", "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
-			null);
-		var postEntity = PostEntity.of(body, userEntity);
+		var postEntity = PostEntity.of(body, AUTHORIZED_USER);
 
 		// mocking
-		when(postEntityRepository.save(any(PostEntity.class))).thenReturn(postEntity);
+		when(postEntityRepository.save(any(PostEntity.class)))
+			.thenReturn(postEntity);
 
 		// when
-		var newPost = postService.createPost(new PostCreateRequest(body), userEntity);
+		var newPost = postService.createPost(new PostCreateRequest(body), AUTHORIZED_USER);
 
 		// then
 		assertThat(newPost).isNotNull();
@@ -127,8 +135,8 @@ class PostServiceTest {
 		var body = "new created post test body";
 
 		// mocking
-		when(postEntityRepository.save(any(PostEntity.class))).thenThrow(
-			new PostCreatedFailureException(new RuntimeException()));
+		when(postEntityRepository.save(any(PostEntity.class)))
+			.thenThrow(new PostCreatedFailureException(new RuntimeException()));
 
 		// when
 
@@ -148,24 +156,25 @@ class PostServiceTest {
 
 		// given
 		var body = "modified post test body";
-		Optional<PostEntity> mockTestPost = Optional.of(
-			new PostEntity(null, body, ZonedDateTime.now(), ZonedDateTime.now(), null, null));
+		var mockTestPost = Optional.of(PostEntity.of(body, AUTHORIZED_USER));
 
 		// mocking
-		when(postEntityRepository.findById(anyLong())).thenReturn(mockTestPost);
-		when(postEntityRepository.save(any(PostEntity.class))).thenReturn(mockTestPost.get());
+		when(postEntityRepository.findById(anyLong()))
+			.thenReturn(mockTestPost);
+		when(postEntityRepository.save(any(PostEntity.class)))
+			.thenReturn(mockTestPost.get());
 
 		// when
-		var updatePost = postService.updatePost(anyLong(), new PostUpdateRequest(body));
+		var updatePost = postService.updatePost(anyLong(), new PostUpdateRequest(body), AUTHORIZED_USER);
 
 		// then
 		assertThat(updatePost).isNotNull();
 		assertThat(updatePost.body()).isEqualTo(body);
 
 		verify(postEntityRepository, times(1)).findById(anyLong());
-		verify(postEntityRepository, times(1)).save(any(PostEntity.class));
-
 		verify(postEntityRepository, timeout(3000)).findById(anyLong());
+
+		verify(postEntityRepository, times(1)).save(any(PostEntity.class));
 		verify(postEntityRepository, timeout(3000)).save(any(PostEntity.class));
 
 		verifyNoMoreInteractions(postEntityRepository);
@@ -176,19 +185,40 @@ class PostServiceTest {
 	void updatedPostServiceTestFailure() {
 		// given
 		var body = "modified post test body";
-		var postId = anyLong();
 
 		// mocking
-		when(postEntityRepository.findById(postId)).thenThrow(
-			new PostNotFoundException(postId));
+		when(postEntityRepository.findById(anyLong()))
+			.thenThrow(new PostNotFoundException());
 
 		// when
 
 		// then
-		assertThatThrownBy(() -> postService.updatePost(postId, new PostUpdateRequest(body)))
+		assertThatThrownBy(() -> postService.updatePost(anyLong(), new PostUpdateRequest(body), AUTHORIZED_USER))
 			.isInstanceOf(PostNotFoundException.class);
 
-		verify(postEntityRepository, times(1)).findById(anyLong());
+		verify(postEntityRepository, only()).findById(anyLong());
+		verify(postEntityRepository, timeout(3000)).findById(anyLong());
+
+		verifyNoMoreInteractions(postEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Failure] Post 수정 서비스 권한 불일치 테스트")
+	void updatedPostServiceNotAllowedTestFailure() {
+
+		// given
+		var body = "modified post test body";
+		var mockTestPost = Optional.of(PostEntity.of(body, AUTHORIZED_USER));
+
+		// mocking
+		when(postEntityRepository.findById(anyLong()))
+			.thenReturn(mockTestPost);
+
+		// when
+		assertThatThrownBy(() -> postService.updatePost(anyLong(), new PostUpdateRequest(body), OTHER_USER))
+			.isInstanceOf(UserNotAllowedException.class);
+
+		// then
 		verify(postEntityRepository, only()).findById(anyLong());
 		verify(postEntityRepository, timeout(3000)).findById(anyLong());
 
@@ -200,11 +230,11 @@ class PostServiceTest {
 	void deletedPostServiceTestSuccess() {
 		// given
 		var deleteDateTime = ZonedDateTime.now();
-		Optional<PostEntity> findPostEntity = Optional.of(
-			new PostEntity(null, null, ZonedDateTime.now(), ZonedDateTime.now(), null, null));
+		var findPostEntity = Optional.of(PostEntity.of("", AUTHORIZED_USER));
 
 		// mocking
-		when(postEntityRepository.findById(anyLong())).thenReturn(findPostEntity);
+		when(postEntityRepository.findById(anyLong()))
+			.thenReturn(findPostEntity);
 		doAnswer(invocationOnMock -> {
 			PostEntity entity = invocationOnMock.getArgument(0);
 
@@ -217,7 +247,7 @@ class PostServiceTest {
 		}).when(postEntityRepository).delete(any(PostEntity.class));
 
 		// when
-		postService.deletePost(anyLong());
+		postService.deletePost(anyLong(), AUTHORIZED_USER);
 
 		// then
 		verify(postEntityRepository, times(1)).findById(anyLong());
@@ -232,22 +262,42 @@ class PostServiceTest {
 	@DisplayName("[Failure] Post 삭제 서비스 테스트")
 	void deletedPostServiceTestFailure() {
 		// given
-		var postId = anyLong();
 
 		// mocking
-		when(postEntityRepository.findById(postId)).thenThrow(
-			new PostNotFoundException(postId));
+		when(postEntityRepository.findById(anyLong()))
+			.thenThrow(new PostNotFoundException());
 
 		// when
 
 		// then
-		assertThatThrownBy(() -> postService.deletePost(postId))
+		assertThatThrownBy(() -> postService.deletePost(anyLong(), AUTHORIZED_USER))
 			.isInstanceOf(PostNotFoundException.class);
 
-		verify(postEntityRepository, times(1)).findById(anyLong());
 		verify(postEntityRepository, only()).findById(anyLong());
 		verify(postEntityRepository, timeout(3000)).findById(anyLong());
 
+		verifyNoMoreInteractions(postEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Failure] Post 삭제 서비스 권한 불일치 테스트")
+	void deletedPostServiceNotAllowedTestFailure() {
+		// given
+		var findPostEntity = Optional.of(PostEntity.of("", AUTHORIZED_USER));
+
+		// mocking
+		when(postEntityRepository.findById(anyLong()))
+			.thenReturn(findPostEntity);
+
+		// when
+		assertThatThrownBy(() -> postService.deletePost(anyLong(), OTHER_USER))
+			.isInstanceOf(UserNotAllowedException.class);
+
+		// then
+		verify(postEntityRepository, only()).findById(anyLong());
+		verify(postEntityRepository, timeout(3000)).findById(anyLong());
+
+		verify(postEntityRepository, times(0)).delete(any(PostEntity.class));
 		verifyNoMoreInteractions(postEntityRepository);
 	}
 
