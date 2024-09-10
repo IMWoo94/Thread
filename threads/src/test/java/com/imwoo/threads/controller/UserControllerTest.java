@@ -1,9 +1,11 @@
 package com.imwoo.threads.controller;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.imwoo.threads.common.context.support.annotation.WithMockAdmin;
 import com.imwoo.threads.config.TestWebSecurityConfiguration;
 import com.imwoo.threads.exception.user.UserDuplicatedException;
 import com.imwoo.threads.exception.user.UserNotFoundException;
@@ -217,4 +220,85 @@ class UserControllerTest {
 		Mockito.verify(userService, Mockito.only()).authenticate(anyString(), anyString());
 		Mockito.verify(userService, Mockito.timeout(3000)).authenticate(anyString(), anyString());
 	}
+
+	@Test
+	@DisplayName("[Success] 회원 조회 전체 요청 테스트")
+	@WithMockAdmin
+	void userSearchQueryNotExistsRequestTestSuccess() throws Exception {
+		// given
+		var url = "/api/v1/users";
+		var users = List.of(
+			User.from(
+				new UserEntity(1L, "admin", "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null)),
+			User.from(
+				new UserEntity(2L, "a", "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null))
+		);
+
+		// mocking
+		when(userService.getUsers(anyString())).thenReturn(users);
+
+		// when
+		mockMvc.perform(
+				MockMvcRequestBuilders.get(url)
+			).andExpect(MockMvcResultMatchers.status().isOk())
+			.andDo(print());
+
+		// then
+		Mockito.verify(userService, Mockito.times(1)).getUsers(null);
+		Mockito.verify(userService, Mockito.only()).getUsers(null);
+	}
+
+	@Test
+	@DisplayName("[Success] 회원 조회 Like 요청 테스트")
+	@WithMockAdmin
+	void userSearchQueryExistsRequestTestSuccess() throws Exception {
+		// given
+		var query = "a";
+		var url = "/api/v1/users";
+		var users = List.of(
+			User.from(
+				new UserEntity(1L, "admin", "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null)),
+			User.from(
+				new UserEntity(2L, "a", "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null))
+		);
+
+		// mocking
+		when(userService.getUsers(anyString())).thenReturn(users);
+
+		// when
+		mockMvc.perform(
+				MockMvcRequestBuilders.get(url)
+					.param("query", query)
+			).andExpect(MockMvcResultMatchers.status().isOk())
+			.andDo(print());
+
+		// then
+		Mockito.verify(userService, Mockito.times(1)).getUsers(anyString());
+		Mockito.verify(userService, Mockito.only()).getUsers(anyString());
+	}
+
+	@Test
+	@DisplayName("[Success] 회원 조회 단건 요청 테스트")
+	@WithMockAdmin
+	void userSearchUsernameRequestTestSuccess() throws Exception {
+		// given
+		var username = "admin";
+		var url = "/api/v1/users/";
+		var user = User.from(
+			new UserEntity(1L, "admin", "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		// mocking
+		when(userService.getUser(anyString())).thenReturn(user);
+
+		// when
+		mockMvc.perform(
+				MockMvcRequestBuilders.get(url + username)
+			).andExpect(MockMvcResultMatchers.status().isOk())
+			.andDo(print());
+
+		// then
+		Mockito.verify(userService, Mockito.times(1)).getUser(anyString());
+		Mockito.verify(userService, Mockito.only()).getUser(anyString());
+	}
+
 }

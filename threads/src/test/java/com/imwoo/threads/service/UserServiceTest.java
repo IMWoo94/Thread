@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
@@ -216,5 +217,88 @@ class UserServiceTest {
 
 		verifyNoMoreInteractions(userEntityRepository);
 
+	}
+
+	@Test
+	@DisplayName("[Success] User 조회 전체 서비스 테스트")
+	void userSearchQueryNotExistsServiceTestSuccess() {
+		// given
+
+		// mocking
+		Mockito.when(userEntityRepository.findAll()).thenReturn(List.of(new UserEntity()));
+
+		// when
+		userService.getUsers(null);
+
+		// then
+		verify(userEntityRepository, times(1)).findAll();
+		verify(userEntityRepository, only()).findAll();
+		verify(userEntityRepository, timeout(3000)).findAll();
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Success] User 조회 Like 서비스 테스트")
+	void userSearchQueryExistsServiceTestSuccess() {
+		// given
+		var query = "a";
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsernameContaining(anyString())).thenReturn(List.of(new UserEntity()));
+
+		// when
+		userService.getUsers(query);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsernameContaining(anyString());
+		verify(userEntityRepository, only()).findByUsernameContaining(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsernameContaining(anyString());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Success] User 조회 단건 서비스 테스트")
+	void userSearchUsernameServiceTestSuccess() {
+		// given
+		var username = "admin";
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenReturn(Optional.of(
+				new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null)));
+
+		// when
+		userService.getUser(username);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, only()).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Failure] User 조회 단건 서비스 테스트")
+	void userSearchUsernameServiceTestFailure() {
+		// given
+		var username = "admin";
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenReturn(Optional.empty());
+
+		// when
+		Assertions.assertThatThrownBy(() -> userService.getUser(username))
+			.isInstanceOf(UserNotFoundException.class);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, only()).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+
+		verifyNoMoreInteractions(userEntityRepository);
 	}
 }
