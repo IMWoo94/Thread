@@ -1,5 +1,7 @@
 package com.imwoo.threads.service;
 
+import java.util.List;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -59,5 +61,30 @@ public class UserService implements UserDetailsService {
 			// TODO : 패스워드 불일치 시 고려할 사항을 차후 적용해보기. 일단은 단순 일치 정보자 없다고 제공
 			throw new UserNotFoundException(username);
 		}
+	}
+
+	public List<User> getUsers(String query) {
+		List<UserEntity> userEntities;
+
+		if (query != null && !query.isBlank()) {
+			// TODO : query 검색어 기반, 해당 검색하기 username 에 포함되는 유저목록 가져오기.
+			// 쿼리 Like 예약어로 간단한 검색은 가능하지만 차후 elasticsearch 기반 엔진을 사용해서 좀더 검색에 용이한 방식으로 구현해보기
+			userEntities = userEntityRepository.findByUsernameContaining(query);
+		} else {
+			// 전체 유저 검색
+			userEntities = userEntityRepository.findAll();
+		}
+
+		return userEntities
+			.stream()
+			.map(User::from)
+			.toList();
+	}
+
+	public User getUser(String username) {
+		var userEntity = userEntityRepository.findByUsername(username)
+			.orElseThrow(() -> new UserNotFoundException(username));
+
+		return User.from(userEntity);
 	}
 }
