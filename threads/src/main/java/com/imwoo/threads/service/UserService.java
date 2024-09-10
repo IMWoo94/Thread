@@ -9,9 +9,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.imwoo.threads.exception.user.UserDuplicatedException;
+import com.imwoo.threads.exception.user.UserNotAllowedException;
 import com.imwoo.threads.exception.user.UserNotFoundException;
 import com.imwoo.threads.model.entity.UserEntity;
 import com.imwoo.threads.model.user.User;
+import com.imwoo.threads.model.user.request.UserUpdateRequest;
 import com.imwoo.threads.model.user.response.UserAuthenticationResponse;
 import com.imwoo.threads.repository.UserEntityRepository;
 
@@ -84,6 +86,24 @@ public class UserService implements UserDetailsService {
 	public User getUser(String username) {
 		var userEntity = userEntityRepository.findByUsername(username)
 			.orElseThrow(() -> new UserNotFoundException(username));
+
+		return User.from(userEntity);
+	}
+
+	public User updateUser(String username, UserUpdateRequest userUpdateRequest, UserEntity currentUserEntity) {
+		var userEntity = userEntityRepository.findByUsername(username)
+			.orElseThrow(() -> new UserNotFoundException(username));
+
+		// TODO : 동일 사용자만 수정 권한 부여
+		if (!currentUserEntity.equals(userEntity)) {
+			throw new UserNotAllowedException();
+		}
+
+		if (userUpdateRequest.description() != null) {
+			// TODO 트랜잭션 사용해서 JPA 영속성 컨텍스트의 더티 체킹 활용 해보기. / 현재는 Merge 방식으로 적용
+			userEntity.setDescription(userUpdateRequest.description());
+			userEntityRepository.save(userEntity);
+		}
 
 		return User.from(userEntity);
 	}
