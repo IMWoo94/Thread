@@ -7,12 +7,14 @@ import org.springframework.stereotype.Service;
 import com.imwoo.threads.exception.post.PostCreatedFailureException;
 import com.imwoo.threads.exception.post.PostNotFoundException;
 import com.imwoo.threads.exception.user.UserNotAllowedException;
+import com.imwoo.threads.exception.user.UserNotFoundException;
 import com.imwoo.threads.model.entity.PostEntity;
 import com.imwoo.threads.model.entity.UserEntity;
 import com.imwoo.threads.model.post.request.PostCreateRequest;
 import com.imwoo.threads.model.post.request.PostUpdateRequest;
 import com.imwoo.threads.model.post.response.PostResponse;
 import com.imwoo.threads.repository.PostEntityRepository;
+import com.imwoo.threads.repository.UserEntityRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class PostService {
 
 	private final PostEntityRepository postEntityRepository;
+	private final UserEntityRepository userEntityRepository;
 
 	// 전체 조회
 	// TODO 페이지 처리 필요
@@ -82,5 +85,17 @@ public class PostService {
 	private PostEntity getPostByPostIdWithThrow(Long postId) {
 		return postEntityRepository.findById(postId)
 			.orElseThrow(() -> new PostNotFoundException(postId));
+	}
+
+	public List<PostResponse> getPostsByUsername(String username) {
+		var userEntity = userEntityRepository.findByUsername(username)
+			.orElseThrow(() -> new UserNotFoundException(username));
+
+		var posts = postEntityRepository.findByUser(userEntity);
+
+		return posts
+			.stream()
+			.map(PostResponse::from)
+			.toList();
 	}
 }

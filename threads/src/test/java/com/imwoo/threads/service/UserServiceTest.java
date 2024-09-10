@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
@@ -17,9 +18,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.imwoo.threads.exception.user.UserDuplicatedException;
+import com.imwoo.threads.exception.user.UserNotAllowedException;
 import com.imwoo.threads.exception.user.UserNotFoundException;
 import com.imwoo.threads.model.entity.UserEntity;
 import com.imwoo.threads.model.user.User;
+import com.imwoo.threads.model.user.request.UserUpdateRequest;
 import com.imwoo.threads.repository.UserEntityRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -191,7 +194,7 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("[Failure] 회원 인증 서비 패스워드 불일치 테스트")
+	@DisplayName("[Failure] 회원 인증 서비스 패스워드 불일치 테스트")
 	void authenticateServicePasswordNotMatchedTestFailure() {
 		// given
 		var username = "null";
@@ -216,5 +219,169 @@ class UserServiceTest {
 
 		verifyNoMoreInteractions(userEntityRepository);
 
+	}
+
+	@Test
+	@DisplayName("[Success] User 조회 전체 서비스 테스트")
+	void userSearchQueryNotExistsServiceTestSuccess() {
+		// given
+
+		// mocking
+		Mockito.when(userEntityRepository.findAll()).thenReturn(List.of(new UserEntity()));
+
+		// when
+		userService.getUsers(null);
+
+		// then
+		verify(userEntityRepository, times(1)).findAll();
+		verify(userEntityRepository, only()).findAll();
+		verify(userEntityRepository, timeout(3000)).findAll();
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Success] User 조회 Like 서비스 테스트")
+	void userSearchQueryExistsServiceTestSuccess() {
+		// given
+		var query = "a";
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsernameContaining(anyString())).thenReturn(List.of(new UserEntity()));
+
+		// when
+		userService.getUsers(query);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsernameContaining(anyString());
+		verify(userEntityRepository, only()).findByUsernameContaining(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsernameContaining(anyString());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Success] User 조회 단건 서비스 테스트")
+	void userSearchUsernameServiceTestSuccess() {
+		// given
+		var username = "admin";
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenReturn(Optional.of(
+				new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null)));
+
+		// when
+		userService.getUser(username);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, only()).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Failure] User 조회 단건 서비스 테스트")
+	void userSearchUsernameServiceTestFailure() {
+		// given
+		var username = "admin";
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenReturn(Optional.empty());
+
+		// when
+		Assertions.assertThatThrownBy(() -> userService.getUser(username))
+			.isInstanceOf(UserNotFoundException.class);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, only()).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Success] User 수정 서비스 테스트")
+	void userUpdateServiceTestSuccess() {
+		// given
+		var username = "admin";
+		var userUpdateRequest = new UserUpdateRequest("update description");
+		var userEntity = new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
+			null);
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenReturn(Optional.of(userEntity));
+		Mockito.when(userEntityRepository.save(any())).then(invocationOnMock -> {
+			userEntity.setDescription(userUpdateRequest.description());
+			return userEntity;
+		});
+
+		// when
+		userService.updateUser(username, userUpdateRequest, userEntity);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+		verify(userEntityRepository, times(1)).save(any());
+		verify(userEntityRepository, timeout(3000)).save(any());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Failure] User 수정 서비스 Not Found 테스트")
+	void userUpdateServiceNotFoundTestFailure() {
+		// given
+		var username = "admin";
+		var userUpdateRequest = new UserUpdateRequest("update description");
+		var userEntity = new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
+			null);
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenThrow(new UserNotFoundException(username));
+
+		// when
+		Assertions.assertThatThrownBy(() -> userService.updateUser(username, userUpdateRequest, userEntity))
+			.isInstanceOf(UserNotFoundException.class);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+		verify(userEntityRepository, times(0)).save(any());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Failure] User 수정 서비스 Not Allowed 테스트")
+	void userUpdateServiceNotAllowedTestFailure() {
+		// given
+		var username = "admin";
+		var userUpdateRequest = new UserUpdateRequest("update description");
+		var userEntity = new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
+			null);
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenReturn(Optional.of(userEntity));
+		Mockito.when(userEntityRepository.save(any())).thenThrow(new UserNotAllowedException());
+
+		// when
+		Assertions.assertThatThrownBy(() -> userService.updateUser(username, userUpdateRequest, userEntity))
+			.isInstanceOf(UserNotAllowedException.class);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+		verify(userEntityRepository, times(1)).save(any());
+		verify(userEntityRepository, timeout(3000)).save(any());
+
+		verifyNoMoreInteractions(userEntityRepository);
 	}
 }
