@@ -37,7 +37,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@SQLDelete(sql = "update users set deletedDateTime = CURRENT_TIMESTAMP where userId = ?")
+@SQLDelete(sql = "update user set deletedDateTime = CURRENT_TIMESTAMP where userId = ?")
 //@Where(clause = "deletedDateTime IS NULL")
 @SQLRestriction("deletedDateTime IS NULL")
 /**
