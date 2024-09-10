@@ -7,8 +7,10 @@ import static org.mockito.Mockito.*;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,11 +21,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.imwoo.threads.exception.post.PostCreatedFailureException;
 import com.imwoo.threads.exception.post.PostNotFoundException;
 import com.imwoo.threads.exception.user.UserNotAllowedException;
+import com.imwoo.threads.exception.user.UserNotFoundException;
 import com.imwoo.threads.model.entity.PostEntity;
 import com.imwoo.threads.model.entity.UserEntity;
 import com.imwoo.threads.model.post.request.PostCreateRequest;
 import com.imwoo.threads.model.post.request.PostUpdateRequest;
 import com.imwoo.threads.repository.PostEntityRepository;
+import com.imwoo.threads.repository.UserEntityRepository;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -40,6 +44,8 @@ class PostServiceTest {
 	private PostService postService;
 	@Mock
 	private PostEntityRepository postEntityRepository;
+	@Mock
+	private UserEntityRepository userEntityRepository;
 
 	@Test
 	@DisplayName("[Success] 전체 Post 조회 서비스 테스트")
@@ -299,6 +305,57 @@ class PostServiceTest {
 
 		verify(postEntityRepository, times(0)).delete(any(PostEntity.class));
 		verifyNoMoreInteractions(postEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Success] User Posts 조회 서비스 테스트")
+	void getPostsByUserServiceTestSuccess() {
+		// given
+		var username = "admin";
+		var userEntity = new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
+			null);
+
+		// mocking
+		when(userEntityRepository.findByUsername(anyString()))
+			.thenReturn(Optional.of(userEntity));
+		when(postEntityRepository.findByUser(any())).thenReturn(List.of(PostEntity.of("content", userEntity)));
+
+		// when
+		postService.getPostsByUsername(username);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(any());
+		verify(userEntityRepository, timeout(3000)).findByUsername(any());
+		verify(postEntityRepository, times(1)).findByUser(any());
+		verify(postEntityRepository, timeout(3000)).findByUser(any());
+
+		verifyNoMoreInteractions(postEntityRepository);
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Failure] User Posts 조회 서비스 Not Found 테스트")
+	void getPostsByUserServiceNotFoundTestFailure() {
+		// given
+		var username = "admin";
+		var userEntity = new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
+			null);
+
+		// mocking
+		when(userEntityRepository.findByUsername(anyString()))
+			.thenThrow(new UserNotFoundException(username));
+
+		// when
+		Assertions.assertThatThrownBy(() -> postService.getPostsByUsername(username))
+			.isInstanceOf(UserNotFoundException.class);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(any());
+		verify(userEntityRepository, timeout(3000)).findByUsername(any());
+		verify(postEntityRepository, times(0)).findByUser(any());
+
+		verifyNoMoreInteractions(postEntityRepository);
+		verifyNoMoreInteractions(userEntityRepository);
 	}
 
 }

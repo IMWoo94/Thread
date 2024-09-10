@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,12 +26,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imwoo.threads.common.context.support.annotation.WithMockAdmin;
 import com.imwoo.threads.config.TestWebSecurityConfiguration;
 import com.imwoo.threads.exception.user.UserDuplicatedException;
+import com.imwoo.threads.exception.user.UserNotAllowedException;
 import com.imwoo.threads.exception.user.UserNotFoundException;
 import com.imwoo.threads.model.entity.UserEntity;
+import com.imwoo.threads.model.post.response.PostResponse;
 import com.imwoo.threads.model.user.User;
 import com.imwoo.threads.model.user.request.UserAuthenticateRequest;
 import com.imwoo.threads.model.user.request.UserSignUpRequest;
+import com.imwoo.threads.model.user.request.UserUpdateRequest;
 import com.imwoo.threads.model.user.response.UserAuthenticationResponse;
+import com.imwoo.threads.service.PostService;
 import com.imwoo.threads.service.UserService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +53,8 @@ class UserControllerTest {
 
 	@Autowired
 	private UserService userService;
+	@MockBean
+	private PostService postService;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -299,6 +306,169 @@ class UserControllerTest {
 		// then
 		Mockito.verify(userService, Mockito.times(1)).getUser(anyString());
 		Mockito.verify(userService, Mockito.only()).getUser(anyString());
+	}
+
+	@Test
+	@DisplayName("[Failure] 회원 조회 단건 요청 테스트")
+	@WithMockAdmin
+	void userSearchUsernameRequestNotFoundTestFailure() throws Exception {
+		// given
+		var username = "admin";
+		var url = "/api/v1/users/";
+		var user = User.from(
+			new UserEntity(1L, "admin", "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		// mocking
+		when(userService.getUser(anyString())).thenThrow(new UserNotFoundException(username));
+
+		// when
+		mockMvc.perform(
+			MockMvcRequestBuilders.get(url + username)
+		).andExpect(result -> {
+			Assertions.assertInstanceOf(UserNotFoundException.class, result.getResolvedException());
+		}).andDo(print());
+
+		// then
+		Mockito.verify(userService, Mockito.times(1)).getUser(anyString());
+		Mockito.verify(userService, Mockito.only()).getUser(anyString());
+	}
+
+	@Test
+	@DisplayName("[Success] 회원 변경 요청 테스트")
+	@WithMockAdmin
+	void userUpdateRequestTestSuccess() throws Exception {
+		// given
+		var username = "admin";
+		var description = "update description";
+		var requestBody = readJson(new UserUpdateRequest(description));
+		var url = "/api/v1/users/";
+		var user = User.from(
+			new UserEntity(1L, username, "admin", null, description, ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		// mocking
+		when(userService.updateUser(anyString(), any(), any())).thenReturn(user);
+
+		// when
+		mockMvc.perform(
+				MockMvcRequestBuilders.patch(url + username)
+					.contentType(MediaType.APPLICATION_JSON_VALUE)
+					.characterEncoding(StandardCharsets.UTF_8)
+					.content(requestBody)
+			).andExpect(MockMvcResultMatchers.status().isOk())
+			.andDo(print());
+
+		// then
+		Mockito.verify(userService, Mockito.times(1)).updateUser(anyString(), any(), any());
+		Mockito.verify(userService, Mockito.only()).updateUser(anyString(), any(), any());
+	}
+
+	@Test
+	@DisplayName("[Failure] 회원 변경 요청 Not Found 테스트")
+	@WithMockAdmin
+	void userUpdateRequestNotFoundTestFailure() throws Exception {
+		// given
+		var username = "admin";
+		var description = "update description";
+		var requestBody = readJson(new UserUpdateRequest(description));
+		var url = "/api/v1/users/";
+
+		// mocking
+		when(userService.updateUser(anyString(), any(), any())).thenThrow(new UserNotFoundException(username));
+
+		// when
+		mockMvc.perform(
+			MockMvcRequestBuilders.patch(url + username)
+				.contentType(MediaType.APPLICATION_JSON_VALUE)
+				.characterEncoding(StandardCharsets.UTF_8)
+				.content(requestBody)
+		).andExpect(result -> {
+			Assertions.assertInstanceOf(UserNotFoundException.class, result.getResolvedException());
+		}).andDo(print());
+
+		// then
+		Mockito.verify(userService, Mockito.times(1)).updateUser(anyString(), any(), any());
+		Mockito.verify(userService, Mockito.only()).updateUser(anyString(), any(), any());
+	}
+
+	@Test
+	@DisplayName("[Failure] 회원 변경 요청 Not Allowed 테스트")
+	@WithMockAdmin
+	void userUpdateRequestNotAllowedTestFailure() throws Exception {
+		// given
+		var username = "admin";
+		var description = "update description";
+		var requestBody = readJson(new UserUpdateRequest(description));
+		var url = "/api/v1/users/";
+
+		// mocking
+		when(userService.updateUser(anyString(), any(), any())).thenThrow(new UserNotAllowedException());
+
+		// when
+		mockMvc.perform(
+			MockMvcRequestBuilders.patch(url + username)
+				.contentType(MediaType.APPLICATION_JSON_VALUE)
+				.characterEncoding(StandardCharsets.UTF_8)
+				.content(requestBody)
+		).andExpect(result -> {
+			Assertions.assertInstanceOf(UserNotAllowedException.class, result.getResolvedException());
+		}).andDo(print());
+
+		// then
+		Mockito.verify(userService, Mockito.times(1)).updateUser(anyString(), any(), any());
+		Mockito.verify(userService, Mockito.only()).updateUser(anyString(), any(), any());
+	}
+
+	@Test
+	@DisplayName("[Success] 회원 게시글 요청 테스트")
+	@WithMockAdmin
+	void userGetPostsRequestTestSuccess() throws Exception {
+		// given
+		var username = "admin";
+		var url = "/api/v1/users/" + username + "/posts";
+		var user = User.from(
+			new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		var posts = List.of(new PostResponse(1L, "test", user, ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		// mocking
+		when(postService.getPostsByUsername(anyString())).thenReturn(posts);
+
+		// when
+		mockMvc.perform(
+				MockMvcRequestBuilders.get(url)
+			).andExpect(MockMvcResultMatchers.status().isOk())
+			.andDo(print());
+
+		// then
+		Mockito.verify(postService, Mockito.times(1)).getPostsByUsername(anyString());
+		Mockito.verify(postService, Mockito.only()).getPostsByUsername(anyString());
+	}
+
+	@Test
+	@DisplayName("[Failure] 회원 게시글 요청 Not Found 테스트")
+	@WithMockAdmin
+	void userGetPostsRequestNotFoundTestFailure() throws Exception {
+		// given
+		var username = "admin";
+		var url = "/api/v1/users/" + username + "/posts";
+		var user = User.from(
+			new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		var posts = List.of(new PostResponse(1L, "test", user, ZonedDateTime.now(), ZonedDateTime.now(), null));
+
+		// mocking
+		when(postService.getPostsByUsername(anyString())).thenThrow(new UserNotFoundException(username));
+
+		// when
+		mockMvc.perform(
+			MockMvcRequestBuilders.get(url)
+		).andExpect(result -> {
+			Assertions.assertInstanceOf(UserNotFoundException.class, result.getResolvedException());
+		}).andDo(print());
+
+		// then
+		Mockito.verify(postService, Mockito.times(1)).getPostsByUsername(anyString());
+		Mockito.verify(postService, Mockito.only()).getPostsByUsername(anyString());
 	}
 
 }

@@ -18,9 +18,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.imwoo.threads.exception.user.UserDuplicatedException;
+import com.imwoo.threads.exception.user.UserNotAllowedException;
 import com.imwoo.threads.exception.user.UserNotFoundException;
 import com.imwoo.threads.model.entity.UserEntity;
 import com.imwoo.threads.model.user.User;
+import com.imwoo.threads.model.user.request.UserUpdateRequest;
 import com.imwoo.threads.repository.UserEntityRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -192,7 +194,7 @@ class UserServiceTest {
 	}
 
 	@Test
-	@DisplayName("[Failure] 회원 인증 서비 패스워드 불일치 테스트")
+	@DisplayName("[Failure] 회원 인증 서비스 패스워드 불일치 테스트")
 	void authenticateServicePasswordNotMatchedTestFailure() {
 		// given
 		var username = "null";
@@ -298,6 +300,87 @@ class UserServiceTest {
 		verify(userEntityRepository, times(1)).findByUsername(anyString());
 		verify(userEntityRepository, only()).findByUsername(anyString());
 		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Success] User 수정 서비스 테스트")
+	void userUpdateServiceTestSuccess() {
+		// given
+		var username = "admin";
+		var userUpdateRequest = new UserUpdateRequest("update description");
+		var userEntity = new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
+			null);
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenReturn(Optional.of(userEntity));
+		Mockito.when(userEntityRepository.save(any())).then(invocationOnMock -> {
+			userEntity.setDescription(userUpdateRequest.description());
+			return userEntity;
+		});
+
+		// when
+		userService.updateUser(username, userUpdateRequest, userEntity);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+		verify(userEntityRepository, times(1)).save(any());
+		verify(userEntityRepository, timeout(3000)).save(any());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Failure] User 수정 서비스 Not Found 테스트")
+	void userUpdateServiceNotFoundTestFailure() {
+		// given
+		var username = "admin";
+		var userUpdateRequest = new UserUpdateRequest("update description");
+		var userEntity = new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
+			null);
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenThrow(new UserNotFoundException(username));
+
+		// when
+		Assertions.assertThatThrownBy(() -> userService.updateUser(username, userUpdateRequest, userEntity))
+			.isInstanceOf(UserNotFoundException.class);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+		verify(userEntityRepository, times(0)).save(any());
+
+		verifyNoMoreInteractions(userEntityRepository);
+	}
+
+	@Test
+	@DisplayName("[Failure] User 수정 서비스 Not Allowed 테스트")
+	void userUpdateServiceNotAllowedTestFailure() {
+		// given
+		var username = "admin";
+		var userUpdateRequest = new UserUpdateRequest("update description");
+		var userEntity = new UserEntity(1L, username, "admin", null, null, ZonedDateTime.now(), ZonedDateTime.now(),
+			null);
+
+		// mocking
+		Mockito.when(userEntityRepository.findByUsername(anyString()))
+			.thenReturn(Optional.of(userEntity));
+		Mockito.when(userEntityRepository.save(any())).thenThrow(new UserNotAllowedException());
+
+		// when
+		Assertions.assertThatThrownBy(() -> userService.updateUser(username, userUpdateRequest, userEntity))
+			.isInstanceOf(UserNotAllowedException.class);
+
+		// then
+		verify(userEntityRepository, times(1)).findByUsername(anyString());
+		verify(userEntityRepository, timeout(3000)).findByUsername(anyString());
+		verify(userEntityRepository, times(1)).save(any());
+		verify(userEntityRepository, timeout(3000)).save(any());
 
 		verifyNoMoreInteractions(userEntityRepository);
 	}
