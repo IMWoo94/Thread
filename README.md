@@ -32,11 +32,14 @@ Threads 스타일의 SNS 를 만들어 보면서 외부적으로 많은 사용�
 
 ## 사용 스택
 
-#Java21 #Spring Boot 3.3.x #Spring 6.1.x #Spring Data JPA #PostgreSQL
+#Java21 #Spring Boot 3.3.x #Spring 6.1.x #Spring Data JPA #Spring Security6.3.x #JWT #PostgreSQL
 
 Doc : #Swagger #SpringDoc
 
 Test : #JUnit5 #Mockito
+
+Repo : #Git
+
 
 ## 아키텍처
 ### 1차 아키텍처
