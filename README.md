@@ -32,13 +32,23 @@ Threads 스타일의 SNS 를 만들어 보면서 외부적으로 많은 사용�
 
 ## 사용 스택
 
-#Java21 #Spring Boot 3.3.x #Spring 6.1.x #Spring Data JPA #Spring Security6.3.x #JWT #PostgreSQL
+![Java](https://img.shields.io/badge/Java21-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 
-Doc : #Swagger #SpringDoc
+![Spring](https://img.shields.io/badge/Spring6.1.x-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
+<img src="https://img.shields.io/badge/Spring Boot3.3.x-6DB33F?style=for-the-badge&logo=Spring Boot&logoColor=white">
+<img src="https://img.shields.io/badge/Spring Data JPA-FF3621?style=for-the-badge&logo=databricks&logoColor=white">
+<img src="https://img.shields.io/badge/Spring Security6.3.x-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white">
 
-Test : #JUnit5 #Mockito
+![Gradle](https://img.shields.io/badge/Gradle-02303A.svg?style=for-the-badge&logo=Gradle&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 
-Repo : #Git
+<img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=white"> <img src="https://img.shields.io/badge/Springdoc-4285F4?style=for-the-badge&logo=googledocs&logoColor=white">
+
+<img src="https://img.shields.io/badge/JUnit5-25A162?style=for-the-badge&logo=junit5&logoColor=white"> ![Testing-Library](https://img.shields.io/badge/-Mockito-%23E33332?style=for-the-badge&logo=testing-library&logoColor=white)
+
+![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
 
 
 ## 아키텍처
